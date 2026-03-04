@@ -125,7 +125,7 @@ class DashboardScreen extends ConsumerWidget {
                   Navigator.pop(ctx);
                   // Navigate to the profile detail
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => _ProfileDetailRoute(profileId: id),
+                    builder: (_) => _ProfileDetailPageShell(profileId: id),
                   ));
                 }
               },
@@ -203,7 +203,7 @@ class _DashboardBody extends ConsumerWidget {
                     const Icon(Icons.shield_rounded, color: kAccent, size: 28),
                     const SizedBox(width: 10),
                     const Text(
-                      'FocusLock',
+                      'Unspend',
                       style: TextStyle(
                         color: kTextPrimary,
                         fontSize: 24,
@@ -302,6 +302,20 @@ class _DashboardBody extends ConsumerWidget {
                   if (profile.isActive) {
                     // Deactivation requires PIN + timer
                     _showDeactivateDialog(context, ref, profile.id);
+                  } else if (!profile.hasAppsSelected) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'No apps in this group — select apps first',
+                          style: TextStyle(color: kTextPrimary),
+                        ),
+                        backgroundColor: kSurface,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
                   } else {
                     await notifier.activateProfile(profile.id);
                   }
@@ -650,6 +664,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   late TextEditingController _nameController;
   late bool _scheduleEnabled;
   late bool _usageLimitEnabled;
+  late bool _taskModeEnabled;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
   late int _usageLimitMinutes;
@@ -674,6 +689,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     _nameController = TextEditingController(text: p.name);
     _scheduleEnabled = p.scheduleEnabled;
     _usageLimitEnabled = p.usageLimitEnabled;
+    _taskModeEnabled = p.taskModeEnabled;
     _startTime = TimeOfDay(
       hour: p.scheduleStartHour ?? 9,
       minute: p.scheduleStartMinute ?? 0,
@@ -700,6 +716,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       iconLabel: _selectedIconLabel,
       scheduleEnabled: _scheduleEnabled,
       usageLimitEnabled: _usageLimitEnabled,
+      taskModeEnabled: _taskModeEnabled,
       scheduleStartHour: _startTime.hour,
       scheduleStartMinute: _startTime.minute,
       scheduleEndHour: _endTime.hour,
@@ -1115,6 +1132,28 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                     const SizedBox(height: 8),
 
+                    // ── Task Mode toggle + task list ────────────────────
+                    _RuleToggleCard(
+                      icon: Icons.checklist_rounded,
+                      title: 'Task Mode',
+                      description: 'Block until all tasks are completed',
+                      enabled: _taskModeEnabled,
+                      accent: accent,
+                      onToggle: (v) {
+                        setState(() => _taskModeEnabled = v);
+                        _save();
+                      },
+                    ),
+                    if (_taskModeEnabled) ...[
+                      _TaskListSection(
+                        profile: p,
+                        accent: accent,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    const SizedBox(height: 8),
+
                     // ── Activate / Deactivate ───────────────────────────
                     if (p.isActive)
                       _FullWidthButton(
@@ -1143,15 +1182,34 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                       )
                     else
                       _FullWidthButton(
-                        label: 'Activate Shield',
-                        icon: Icons.shield_rounded,
-                        color: kTextPrimary,
-                        bgColor: accent,
+                        label: p.hasAppsSelected
+                            ? 'Activate Shield'
+                            : 'Select Apps to Activate',
+                        icon: p.hasAppsSelected
+                            ? Icons.shield_rounded
+                            : Icons.apps_rounded,
+                        color: p.hasAppsSelected ? kTextPrimary : kTextSecondary,
+                        bgColor: p.hasAppsSelected ? accent : kSurface,
+                        borderColor: p.hasAppsSelected ? null : kBorder,
                         onPressed: p.hasAppsSelected
                             ? () => ref
                                 .read(profilesProvider.notifier)
                                 .activateProfile(p.id)
-                            : null,
+                            : () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'No apps in this group — select apps first',
+                                      style: TextStyle(color: kTextPrimary),
+                                    ),
+                                    backgroundColor: kSurface,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                );
+                              },
                       ),
 
                     const SizedBox(height: 32),
@@ -1742,5 +1800,251 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     } else {
       setState(() => _pinError = 'Incorrect PIN');
     }
+  }
+}
+
+// ── Task List Section ──────────────────────────────────────────────────────
+class _TaskListSection extends ConsumerStatefulWidget {
+  final BlockerProfile profile;
+  final Color accent;
+  const _TaskListSection({required this.profile, required this.accent});
+
+  @override
+  ConsumerState<_TaskListSection> createState() => _TaskListSectionState();
+}
+
+class _TaskListSectionState extends ConsumerState<_TaskListSection> {
+  final _taskController = TextEditingController();
+
+  @override
+  void dispose() {
+    _taskController.dispose();
+    super.dispose();
+  }
+
+  void _addTask() {
+    final title = _taskController.text.trim();
+    if (title.isEmpty) return;
+    ref
+        .read(profilesProvider.notifier)
+        .addTask(widget.profile.id, title);
+    _taskController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tasks = widget.profile.tasks;
+    final doneCount = tasks.where((t) => t.isDone).length;
+    final isActive = widget.profile.isActive;
+
+    return _SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row
+          Row(
+            children: [
+              Icon(Icons.checklist_rounded,
+                  color: widget.accent, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Tasks',
+                  style: TextStyle(
+                    color: kTextPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (tasks.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: doneCount == tasks.length
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : widget.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$doneCount / ${tasks.length}',
+                    style: TextStyle(
+                      color: doneCount == tasks.length
+                          ? Colors.green
+                          : widget.accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (tasks.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: tasks.isEmpty ? 0 : doneCount / tasks.length,
+                backgroundColor: kBorder,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  doneCount == tasks.length ? Colors.green : widget.accent,
+                ),
+                minHeight: 4,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+
+          // Task items
+          ...tasks.map((task) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    // Checkbox
+                    GestureDetector(
+                      onTap: () => ref
+                          .read(profilesProvider.notifier)
+                          .toggleTask(widget.profile.id, task.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: task.isDone
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: task.isDone ? Colors.green : kBorder,
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: task.isDone
+                            ? const Icon(Icons.check_rounded,
+                                color: Colors.green, size: 16)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Title
+                    Expanded(
+                      child: Text(
+                        task.title,
+                        style: TextStyle(
+                          color: task.isDone ? kTextSecondary : kTextPrimary,
+                          fontSize: 14,
+                          decoration: task.isDone
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: kTextSecondary,
+                        ),
+                      ),
+                    ),
+                    // Delete button (only when shield is NOT active)
+                    if (!isActive)
+                      GestureDetector(
+                        onTap: () => ref
+                            .read(profilesProvider.notifier)
+                            .removeTask(widget.profile.id, task.id),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.close_rounded,
+                              color: kTextSecondary, size: 18),
+                        ),
+                      ),
+                  ],
+                ),
+              )),
+
+          // Add-task row
+          ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _taskController,
+                    style: const TextStyle(
+                        color: kTextPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Add a task…',
+                      hintStyle: const TextStyle(
+                          color: kTextSecondary, fontSize: 14),
+                      isDense: true,
+                      filled: true,
+                      fillColor: kBg,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: kBorder),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: kBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: widget.accent),
+                      ),
+                    ),
+                    onSubmitted: (_) => _addTask(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _addTask,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: widget.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.add_rounded,
+                        color: widget.accent, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Info note when active
+          if (isActive && tasks.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    color: kTextSecondary, size: 14),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    doneCount == tasks.length
+                        ? 'All tasks done — shield will deactivate'
+                        : '${tasks.length - doneCount} task${tasks.length - doneCount == 1 ? '' : 's'} remaining to unlock',
+                    style: const TextStyle(
+                      color: kTextSecondary,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (tasks.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Add tasks that must be completed before apps unlock.',
+                style: TextStyle(color: kTextSecondary, fontSize: 12),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

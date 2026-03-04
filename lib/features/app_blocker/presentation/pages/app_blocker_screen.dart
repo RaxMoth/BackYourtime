@@ -71,7 +71,7 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
               Icon(Icons.shield_outlined, color: _kAccent, size: 28),
               const SizedBox(width: 10),
               const Text(
-                'FocusLock',
+                'Unspend',
                 style: TextStyle(
                   color: _kTextPrimary,
                   fontSize: 22,

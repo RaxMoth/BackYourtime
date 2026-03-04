@@ -122,9 +122,17 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       await _ds.startUsageLimit(minutes: profile.usageLimitMinutes!);
     }
 
+    // 4) Task mode: reset tasks to undone so the user must complete them.
+    BlockerProfile activatedProfile = profile;
+    if (profile.taskModeEnabled && profile.tasks.isNotEmpty) {
+      activatedProfile = profile.copyWith(
+        tasks: profile.tasks.map((t) => t.copyWith(isDone: false)).toList(),
+      );
+    }
+
     final list = state.requireValue.map((p) {
       if (p.id != id) return p;
-      return p.copyWith(isActive: true);
+      return activatedProfile.copyWith(isActive: true);
     }).toList();
     state = AsyncData(list);
     await _persist(list);
@@ -149,6 +157,65 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     } else {
       await activateProfile(id);
     }
+  }
+
+  // ── Task management ────────────────────────────────────────────────
+
+  /// Add a new task to a profile.
+  Future<void> addTask(String profileId, String title) async {
+    final taskId = DateTime.now().microsecondsSinceEpoch.toString();
+    final list = state.requireValue.map((p) {
+      if (p.id != profileId) return p;
+      return p.copyWith(
+        tasks: [...p.tasks, BlockerTask(id: taskId, title: title)],
+      );
+    }).toList();
+    state = AsyncData(list);
+    await _persist(list);
+  }
+
+  /// Remove a task from a profile.
+  Future<void> removeTask(String profileId, String taskId) async {
+    final list = state.requireValue.map((p) {
+      if (p.id != profileId) return p;
+      return p.copyWith(
+        tasks: p.tasks.where((t) => t.id != taskId).toList(),
+      );
+    }).toList();
+    state = AsyncData(list);
+    await _persist(list);
+  }
+
+  /// Toggle a task’s done state. If task mode is active and all tasks
+  /// are now done, automatically deactivate the shield.
+  Future<void> toggleTask(String profileId, String taskId) async {
+    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    final updatedTasks = profile.tasks
+        .map((t) => t.id == taskId ? t.copyWith(isDone: !t.isDone) : t)
+        .toList();
+    final updatedProfile = profile.copyWith(tasks: updatedTasks);
+
+    // Check if all tasks are done → auto-deactivate.
+    if (updatedProfile.taskModeEnabled &&
+        updatedProfile.isActive &&
+        updatedProfile.allTasksDone) {
+      await _ds.removeShield();
+      await _ds.stopMonitoring();
+      final list = state.requireValue.map((p) {
+        if (p.id != profileId) return p;
+        return updatedProfile.copyWith(isActive: false);
+      }).toList();
+      state = AsyncData(list);
+      await _persist(list);
+      return;
+    }
+
+    final list = state.requireValue.map((p) {
+      if (p.id != profileId) return p;
+      return updatedProfile;
+    }).toList();
+    state = AsyncData(list);
+    await _persist(list);
   }
 
   // ── PIN management ─────────────────────────────────────────────────────

@@ -1,5 +1,41 @@
 import 'package:flutter/material.dart';
 
+// ── Task entity ────────────────────────────────────────────────────────────
+
+/// A single to-do item that must be completed before apps are unblocked.
+class BlockerTask {
+  final String id;
+  final String title;
+  final bool isDone;
+
+  const BlockerTask({
+    required this.id,
+    required this.title,
+    this.isDone = false,
+  });
+
+  BlockerTask copyWith({String? id, String? title, bool? isDone}) =>
+      BlockerTask(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        isDone: isDone ?? this.isDone,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'isDone': isDone,
+      };
+
+  factory BlockerTask.fromJson(Map<String, dynamic> j) => BlockerTask(
+        id: j['id'] as String,
+        title: j['title'] as String? ?? '',
+        isDone: j['isDone'] as bool? ?? false,
+      );
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
 /// Pre-defined accent colours a user can assign to a profile.
 class ProfileColor {
   final String name;
@@ -47,10 +83,11 @@ class ProfileIcon {
 /// Block rules are stackable:
 ///   • [scheduleEnabled] – hard-block during a daily time window
 ///   • [usageLimitEnabled] – soft-block after a daily screen-time budget
-///   • Neither – "manual" mode, user taps Block Now / Deactivate
+///   • [taskModeEnabled] – block until all [tasks] are marked done
+///   • None enabled – "manual" mode, user taps Block Now / Deactivate
 ///
-/// Schedule + Usage Limit can be combined: the app is blocked during the
-/// schedule window AND limited to [usageLimitMinutes] outside that window.
+/// All rules are stackable. For example Schedule + Task Mode means the
+/// apps are blocked during the window AND until all tasks are completed.
 class BlockerProfile {
   final String id;
   final String name;
@@ -68,6 +105,10 @@ class BlockerProfile {
   // ── Usage-limit rule ─────────────────────────────────────────────────
   final bool usageLimitEnabled;
   final int? usageLimitMinutes;
+
+  // ── Task-mode rule ───────────────────────────────────────────────────
+  final bool taskModeEnabled;
+  final List<BlockerTask> tasks;
 
   /// Whether the user has picked apps for this profile.
   final bool hasAppsSelected;
@@ -88,6 +129,8 @@ class BlockerProfile {
     this.scheduleEndMinute,
     this.usageLimitEnabled = false,
     this.usageLimitMinutes,
+    this.taskModeEnabled = false,
+    this.tasks = const [],
     this.hasAppsSelected = false,
     this.appCount = 0,
   });
@@ -96,7 +139,15 @@ class BlockerProfile {
   ProfileIcon get profileIcon => ProfileIcon.fromLabel(iconLabel);
 
   /// Whether the profile is purely manual (no automated rules).
-  bool get isManualOnly => !scheduleEnabled && !usageLimitEnabled;
+  bool get isManualOnly =>
+      !scheduleEnabled && !usageLimitEnabled && !taskModeEnabled;
+
+  /// Whether all tasks are completed (relevant when [taskModeEnabled]).
+  bool get allTasksDone =>
+      tasks.isNotEmpty && tasks.every((t) => t.isDone);
+
+  /// Number of remaining tasks.
+  int get pendingTaskCount => tasks.where((t) => !t.isDone).length;
 
   /// Human-readable subtitle shown on the profile card.
   String get subtitle {
@@ -117,6 +168,11 @@ class BlockerProfile {
       parts.add('${usageLimitMinutes}min limit');
     }
 
+    if (taskModeEnabled) {
+      final done = tasks.where((t) => t.isDone).length;
+      parts.add('${done}/${tasks.length} tasks');
+    }
+
     if (isManualOnly) parts.add('Manual');
 
     return parts.join(' · ');
@@ -135,6 +191,8 @@ class BlockerProfile {
     int? scheduleEndMinute,
     bool? usageLimitEnabled,
     int? usageLimitMinutes,
+    bool? taskModeEnabled,
+    List<BlockerTask>? tasks,
     bool? hasAppsSelected,
     int? appCount,
   }) {
@@ -151,6 +209,8 @@ class BlockerProfile {
       scheduleEndMinute: scheduleEndMinute ?? this.scheduleEndMinute,
       usageLimitEnabled: usageLimitEnabled ?? this.usageLimitEnabled,
       usageLimitMinutes: usageLimitMinutes ?? this.usageLimitMinutes,
+      taskModeEnabled: taskModeEnabled ?? this.taskModeEnabled,
+      tasks: tasks ?? this.tasks,
       hasAppsSelected: hasAppsSelected ?? this.hasAppsSelected,
       appCount: appCount ?? this.appCount,
     );
@@ -169,6 +229,8 @@ class BlockerProfile {
         'scheduleEndMinute': scheduleEndMinute,
         'usageLimitEnabled': usageLimitEnabled,
         'usageLimitMinutes': usageLimitMinutes,
+        'taskModeEnabled': taskModeEnabled,
+        'tasks': tasks.map((t) => t.toJson()).toList(),
         'hasAppsSelected': hasAppsSelected,
         'appCount': appCount,
       };
@@ -186,6 +248,11 @@ class BlockerProfile {
         scheduleEndMinute: j['scheduleEndMinute'] as int?,
         usageLimitEnabled: j['usageLimitEnabled'] as bool? ?? false,
         usageLimitMinutes: j['usageLimitMinutes'] as int?,
+        taskModeEnabled: j['taskModeEnabled'] as bool? ?? false,
+        tasks: (j['tasks'] as List<dynamic>?)
+                ?.map((e) => BlockerTask.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
         hasAppsSelected: j['hasAppsSelected'] as bool? ?? false,
         appCount: j['appCount'] as int? ?? 0,
       );
