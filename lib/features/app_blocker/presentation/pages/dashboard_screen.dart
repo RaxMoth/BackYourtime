@@ -1838,7 +1838,9 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
     final isActive = widget.profile.isActive;
 
     return _SectionCard(
-      child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header row
@@ -2044,6 +2046,7 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
               ),
             ),
         ],
+      ),
       ),
     );
   }
