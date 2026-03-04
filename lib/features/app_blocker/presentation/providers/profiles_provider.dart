@@ -63,9 +63,20 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   }
 
   /// Update any field of a profile by [id].
+  /// Silently ignores setting changes if the profile is active.
   Future<void> updateProfile(BlockerProfile profile) async {
+    final current = state.requireValue.firstWhere((p) => p.id == profile.id);
+    // If the profile is active, only allow name and cosmetic changes.
+    // Block rule changes are locked while shield is on.
+    final effective = current.isActive
+        ? current.copyWith(
+            name: profile.name,
+            colorValue: profile.colorValue,
+            iconLabel: profile.iconLabel,
+          )
+        : profile;
     final list = state.requireValue
-        .map((p) => p.id == profile.id ? profile : p)
+        .map((p) => p.id == effective.id ? effective : p)
         .toList();
     state = AsyncData(list);
     await _persist(list);
@@ -123,11 +134,16 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }
 
     // 4) Task mode: reset tasks to undone so the user must complete them.
+    //    Also record today's date for the daily-reset check.
     BlockerProfile activatedProfile = profile;
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
     if (profile.taskModeEnabled && profile.tasks.isNotEmpty) {
       activatedProfile = profile.copyWith(
         tasks: profile.tasks.map((t) => t.copyWith(isDone: false)).toList(),
+        tasksLastResetDate: todayStr,
       );
+    } else {
+      activatedProfile = profile.copyWith(tasksLastResetDate: todayStr);
     }
 
     final list = state.requireValue.map((p) {
@@ -175,8 +191,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   // ── Task management ────────────────────────────────────────────────
 
-  /// Add a new task to a profile.
+  /// Add a new task to a profile. Ignored when the profile is active.
   Future<void> addTask(String profileId, String title) async {
+    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    if (profile.isActive) return;
     final taskId = DateTime.now().microsecondsSinceEpoch.toString();
     final list = state.requireValue.map((p) {
       if (p.id != profileId) return p;
@@ -188,8 +206,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     await _persist(list);
   }
 
-  /// Remove a task from a profile.
+  /// Remove a task from a profile. Ignored when the profile is active.
   Future<void> removeTask(String profileId, String taskId) async {
+    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    if (profile.isActive) return;
     final list = state.requireValue.map((p) {
       if (p.id != profileId) return p;
       return p.copyWith(
@@ -200,29 +220,26 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     await _persist(list);
   }
 
-  /// Toggle a task’s done state. If task mode is active and all tasks
-  /// are now done, automatically deactivate the shield.
+  /// Toggle a task's done state.
+  ///
+  /// Daily reset: if the day changed since last reset, reset all tasks first.
   Future<void> toggleTask(String profileId, String taskId) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    var profile = state.requireValue.firstWhere((p) => p.id == profileId);
+
+    // Daily reset check.
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    if (profile.tasksLastResetDate != null &&
+        profile.tasksLastResetDate != todayStr) {
+      profile = profile.copyWith(
+        tasks: profile.tasks.map((t) => t.copyWith(isDone: false)).toList(),
+        tasksLastResetDate: todayStr,
+      );
+    }
+
     final updatedTasks = profile.tasks
         .map((t) => t.id == taskId ? t.copyWith(isDone: !t.isDone) : t)
         .toList();
     final updatedProfile = profile.copyWith(tasks: updatedTasks);
-
-    // Check if all tasks are done → auto-deactivate.
-    if (updatedProfile.taskModeEnabled &&
-        updatedProfile.isActive &&
-        updatedProfile.allTasksDone) {
-      await _ds.removeShield();
-      await _ds.stopMonitoring();
-      final list = state.requireValue.map((p) {
-        if (p.id != profileId) return p;
-        return updatedProfile.copyWith(isActive: false);
-      }).toList();
-      state = AsyncData(list);
-      await _persist(list);
-      return;
-    }
 
     final list = state.requireValue.map((p) {
       if (p.id != profileId) return p;

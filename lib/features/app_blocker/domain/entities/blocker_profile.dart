@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/strings.dart';
 
 // ── Task entity ────────────────────────────────────────────────────────────
 
@@ -116,6 +117,10 @@ class BlockerProfile {
   /// Number of apps selected (for display only).
   final int appCount;
 
+  // ── Task reset tracking ──────────────────────────────────────────────
+  /// Date (yyyy-MM-dd) when tasks were last reset. Used for daily reset.
+  final String? tasksLastResetDate;
+
   // ── Stats tracking ───────────────────────────────────────────────────
   /// When the shield was last activated (ISO-8601). Null if never activated.
   final String? shieldActivatedAt;
@@ -140,6 +145,7 @@ class BlockerProfile {
     this.tasks = const [],
     this.hasAppsSelected = false,
     this.appCount = 0,
+    this.tasksLastResetDate,
     this.shieldActivatedAt,
     this.totalSavedMinutes = 0,
   });
@@ -158,10 +164,61 @@ class BlockerProfile {
   /// Number of remaining tasks.
   int get pendingTaskCount => tasks.where((t) => !t.isDone).length;
 
+  /// Whether the current time is inside the schedule window.
+  bool get isInsideScheduleWindow {
+    if (!scheduleEnabled ||
+        scheduleStartHour == null ||
+        scheduleEndHour == null) return false;
+    final now = TimeOfDay.now();
+    final nowMin = now.hour * 60 + now.minute;
+    final startMin =
+        scheduleStartHour! * 60 + (scheduleStartMinute ?? 0);
+    final endMin = scheduleEndHour! * 60 + (scheduleEndMinute ?? 0);
+    if (startMin <= endMin) {
+      return nowMin >= startMin && nowMin < endMin;
+    }
+    // Overnight window (e.g. 22:00–06:00).
+    return nowMin >= startMin || nowMin < endMin;
+  }
+
+  /// Whether ALL enabled rule requirements are currently satisfied,
+  /// meaning the user should be able to use their apps.
+  ///
+  /// • Schedule → current time must be **outside** the window.
+  /// • Task mode → all tasks must be done.
+  /// • Usage limit → assumed met (actual enforcement is OS-level).
+  /// • Manual (no rules) → never met while active.
+  bool get areRequirementsMet {
+    if (!isActive) return true;
+    if (isManualOnly) return false;
+
+    if (scheduleEnabled && isInsideScheduleWindow) return false;
+    if (taskModeEnabled && !allTasksDone) return false;
+    // Usage limit is enforced at the OS level; we can't check it here
+    // so we optimistically treat it as met.
+    return true;
+  }
+
+  /// Short human-readable explanation of the current lock/unlock state.
+  String get requirementReason {
+    if (!isActive) return '';
+    if (isManualOnly) return S.current.reasonManualMode;
+
+    final reasons = <String>[];
+    if (scheduleEnabled && isInsideScheduleWindow) {
+      reasons.add(S.current.reasonInsideSchedule);
+    }
+    if (taskModeEnabled && !allTasksDone) {
+      reasons.add(S.current.reasonTasksRemaining(pendingTaskCount));
+    }
+    if (reasons.isEmpty) return S.current.reasonAllMet;
+    return reasons.join(' · ');
+  }
+
   /// Human-readable subtitle shown on the profile card.
   String get subtitle {
-    if (!hasAppsSelected) return 'No apps selected';
-    final parts = <String>['$appCount apps'];
+    if (!hasAppsSelected) return S.current.noAppsSelected;
+    final parts = <String>[S.current.subtitleApps(appCount)];
 
     if (scheduleEnabled &&
         scheduleStartHour != null &&
@@ -170,19 +227,19 @@ class BlockerProfile {
           '${scheduleStartHour!.toString().padLeft(2, '0')}:${(scheduleStartMinute ?? 0).toString().padLeft(2, '0')}';
       final e =
           '${scheduleEndHour!.toString().padLeft(2, '0')}:${(scheduleEndMinute ?? 0).toString().padLeft(2, '0')}';
-      parts.add('$s–$e');
+      parts.add(S.current.subtitleScheduleRange(s, e));
     }
 
     if (usageLimitEnabled && usageLimitMinutes != null) {
-      parts.add('${usageLimitMinutes}min limit');
+      parts.add(S.current.subtitleUsageLimit(usageLimitMinutes!));
     }
 
     if (taskModeEnabled) {
       final done = tasks.where((t) => t.isDone).length;
-      parts.add('${done}/${tasks.length} tasks');
+      parts.add(S.current.subtitleTasks(done, tasks.length));
     }
 
-    if (isManualOnly) parts.add('Manual');
+    if (isManualOnly) parts.add(S.current.subtitleManual);
 
     return parts.join(' · ');
   }
@@ -204,6 +261,7 @@ class BlockerProfile {
     List<BlockerTask>? tasks,
     bool? hasAppsSelected,
     int? appCount,
+    String? tasksLastResetDate,
     String? shieldActivatedAt,
     int? totalSavedMinutes,
   }) {
@@ -224,6 +282,7 @@ class BlockerProfile {
       tasks: tasks ?? this.tasks,
       hasAppsSelected: hasAppsSelected ?? this.hasAppsSelected,
       appCount: appCount ?? this.appCount,
+      tasksLastResetDate: tasksLastResetDate ?? this.tasksLastResetDate,
       shieldActivatedAt: shieldActivatedAt ?? this.shieldActivatedAt,
       totalSavedMinutes: totalSavedMinutes ?? this.totalSavedMinutes,
     );
@@ -246,6 +305,7 @@ class BlockerProfile {
         'tasks': tasks.map((t) => t.toJson()).toList(),
         'hasAppsSelected': hasAppsSelected,
         'appCount': appCount,
+        'tasksLastResetDate': tasksLastResetDate,
         'shieldActivatedAt': shieldActivatedAt,
         'totalSavedMinutes': totalSavedMinutes,
       };
@@ -270,6 +330,7 @@ class BlockerProfile {
             [],
         hasAppsSelected: j['hasAppsSelected'] as bool? ?? false,
         appCount: j['appCount'] as int? ?? 0,
+        tasksLastResetDate: j['tasksLastResetDate'] as String?,
         shieldActivatedAt: j['shieldActivatedAt'] as String?,
         totalSavedMinutes: j['totalSavedMinutes'] as int? ?? 0,
       );

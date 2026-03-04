@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/profiles_provider.dart';
 import '../../domain/entities/blocker_profile.dart';
 import '../../domain/entities/usage_stats.dart';
+import '../../../../core/constants/strings.dart';
+import '../../../../shared/providers/locale_provider.dart';
 
 // ── Design tokens (shared across all blocker screens) ──────────────────────
 const kBg = Color(0xFF0D0D0D);
@@ -37,7 +39,7 @@ class DashboardScreen extends ConsumerWidget {
           loading: () =>
               const Center(child: CircularProgressIndicator(color: kAccent)),
           error: (e, _) =>
-              Center(child: Text('Error: $e', style: const TextStyle(color: kAccent))),
+              Center(child: Text(S.current.errorGeneric(e), style: const TextStyle(color: kAccent))),
           data: (profiles) => _DashboardBody(profiles: profiles),
         ),
       ),
@@ -75,8 +77,8 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'New Profile',
+            Text(
+              S.current.newProfile,
               style: TextStyle(
                 color: kTextPrimary,
                 fontSize: 20,
@@ -84,8 +86,8 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Create a group of apps with its own blocking rules.',
+            Text(
+              S.current.createProfileDescription,
               style: TextStyle(color: kTextSecondary, fontSize: 13),
             ),
             const SizedBox(height: 20),
@@ -95,7 +97,7 @@ class DashboardScreen extends ConsumerWidget {
               style: const TextStyle(color: kTextPrimary, fontSize: 16),
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
-                hintText: 'e.g. Social Media, Games…',
+                hintText: S.current.profileNameHint,
                 hintStyle: TextStyle(
                     color: kTextSecondary.withValues(alpha: 0.5), fontSize: 15),
                 filled: true,
@@ -137,7 +139,7 @@ class DashboardScreen extends ConsumerWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Create',
+              child: Text(S.current.create,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ],
@@ -188,6 +190,8 @@ class _DashboardBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch locale so the dashboard rebuilds when language changes.
+    ref.watch(localeProvider);
     final activeCount = profiles.where((p) => p.isActive).length;
 
     return CustomScrollView(
@@ -203,8 +207,8 @@ class _DashboardBody extends ConsumerWidget {
                   children: [
                     const Icon(Icons.shield_rounded, color: kAccent, size: 28),
                     const SizedBox(width: 10),
-                    const Text(
-                      'Unspend',
+                    Text(
+                      S.current.appName,
                       style: TextStyle(
                         color: kTextPrimary,
                         fontSize: 24,
@@ -235,8 +239,8 @@ class _DashboardBody extends ConsumerWidget {
                 // ── Section title ──────────────────────────────────────
                 Row(
                   children: [
-                    const Text(
-                      'Profiles',
+                    Text(
+                      S.current.profilesSectionTitle,
                       style: TextStyle(
                         color: kTextPrimary,
                         fontSize: 18,
@@ -266,8 +270,8 @@ class _DashboardBody extends ConsumerWidget {
                   Icon(Icons.add_circle_outline_rounded,
                       color: kBorder, size: 64),
                   const SizedBox(height: 16),
-                  const Text(
-                    'No profiles yet',
+                  Text(
+                    S.current.noProfilesYet,
                     style: TextStyle(
                       color: kTextSecondary,
                       fontSize: 16,
@@ -275,8 +279,8 @@ class _DashboardBody extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Tap + to create your first blocking profile.',
+                  Text(
+                    S.current.noProfilesTapPlus,
                     style: TextStyle(color: kTextSecondary, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
@@ -310,9 +314,9 @@ class _DashboardBody extends ConsumerWidget {
                   } else if (!profile.hasAppsSelected) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text(
-                          'No apps in this group — select apps first',
-                          style: TextStyle(color: kTextPrimary),
+                        content: Text(
+                          S.current.noAppsWarning,
+                          style: const TextStyle(color: kTextPrimary),
                         ),
                         backgroundColor: kSurface,
                         behavior: SnackBarBehavior.floating,
@@ -374,7 +378,7 @@ class _DashboardBody extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text('Settings',
+              Text(S.current.settings,
                   style: TextStyle(
                       color: kTextPrimary,
                       fontSize: 20,
@@ -382,9 +386,9 @@ class _DashboardBody extends ConsumerWidget {
               const SizedBox(height: 20),
               ListTile(
                 leading: const Icon(Icons.lock_rounded, color: kTextSecondary),
-                title: const Text('Change PIN',
+                title: Text(S.current.changePin,
                     style: TextStyle(color: kTextPrimary)),
-                subtitle: const Text('Trusted-person deactivation PIN',
+                subtitle: Text(S.current.changePinSubtitle,
                     style: TextStyle(color: kTextSecondary, fontSize: 12)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -392,6 +396,27 @@ class _DashboardBody extends ConsumerWidget {
                 onTap: () {
                   Navigator.pop(ctx);
                   _showPinSetupDialog(context, ref);
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading:
+                    const Icon(Icons.language_rounded, color: kTextSecondary),
+                title: Text(S.current.languageLabel,
+                    style: TextStyle(color: kTextPrimary)),
+                subtitle: Text(
+                    S.isGerman
+                        ? S.current.languageGerman
+                        : S.current.languageEnglish,
+                    style: TextStyle(color: kTextSecondary, fontSize: 12)),
+                trailing:
+                    const Icon(Icons.chevron_right_rounded, color: kTextSecondary),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                tileColor: kBg,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showLanguagePicker(context, ref);
                 },
               ),
             ],
@@ -408,6 +433,76 @@ class _DashboardBody extends ConsumerWidget {
       builder: (_) => _PinSetupDialog(
         onSave: (pin) => ref.read(profilesProvider.notifier).savePin(pin),
       ),
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    final currentCode = S.langCode;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: kSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(kRadius)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: kBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(S.current.languageLabel,
+                  style: TextStyle(
+                      color: kTextPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              _languageOption(ctx, ref,
+                  code: 'en',
+                  label: 'English',
+                  selected: currentCode == 'en'),
+              const SizedBox(height: 8),
+              _languageOption(ctx, ref,
+                  code: 'de',
+                  label: 'Deutsch',
+                  selected: currentCode == 'de'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _languageOption(
+    BuildContext ctx,
+    WidgetRef ref, {
+    required String code,
+    required String label,
+    required bool selected,
+  }) {
+    return ListTile(
+      leading: Icon(
+        selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+        color: selected ? kAccent : kTextSecondary,
+      ),
+      title: Text(label, style: TextStyle(color: kTextPrimary)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      tileColor: kBg,
+      onTap: () async {
+        Navigator.pop(ctx);
+        await switchLocale(ref, code);
+      },
     );
   }
 }
@@ -463,11 +558,11 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   anyActive
                       ? allActive
-                          ? 'All Shields Active'
-                          : '$activeCount of $totalProfiles Active'
+                          ? S.current.allShieldsActive
+                          : S.current.someShieldsActive(activeCount, totalProfiles)
                       : totalProfiles == 0
-                          ? 'No Profiles'
-                          : 'Shields Inactive',
+                          ? S.current.noProfiles
+                          : S.current.shieldsInactive,
                   style: const TextStyle(
                     color: kTextPrimary,
                     fontSize: 18,
@@ -477,10 +572,10 @@ class _SummaryCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   anyActive
-                      ? 'Blocking distracting apps'
+                      ? S.current.blockingDistractingApps
                       : totalProfiles == 0
-                          ? 'Create a profile to get started'
-                          : 'No profiles are active',
+                          ? S.current.createProfileToStart
+                          : S.current.noProfilesAreActive,
                   style: const TextStyle(color: kTextSecondary, fontSize: 13),
                 ),
               ],
@@ -554,7 +649,7 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.timer_off_rounded,
-            label: 'Time Saved',
+            label: S.current.timeSaved,
             value: _fmtDuration(totalSaved),
             color: Colors.green,
           ),
@@ -563,7 +658,7 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.phone_android_rounded,
-            label: 'Today',
+            label: S.current.today,
             value: _fmtDuration(todayUsage),
             color: kAccent,
           ),
@@ -572,7 +667,7 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatTile(
             icon: Icons.show_chart_rounded,
-            label: 'Daily Avg',
+            label: S.current.dailyAvg,
             value: _fmtDuration(weekAvg),
             color: const Color(0xFF1E88E5),
           ),
@@ -627,7 +722,7 @@ class _StatTile extends StatelessWidget {
 }
 
 // ── Profile Card ───────────────────────────────────────────────────────────
-class _ProfileCard extends StatelessWidget {
+class _ProfileCard extends ConsumerStatefulWidget {
   final BlockerProfile profile;
   final VoidCallback onTap;
   final VoidCallback onToggle;
@@ -639,9 +734,46 @@ class _ProfileCard extends StatelessWidget {
   });
 
   @override
+  ConsumerState<_ProfileCard> createState() => _ProfileCardState();
+}
+
+class _ProfileCardState extends ConsumerState<_ProfileCard> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTickerIfActive();
+  }
+
+  @override
+  void didUpdateWidget(_ProfileCard old) {
+    super.didUpdateWidget(old);
+    _startTickerIfActive();
+  }
+
+  void _startTickerIfActive() {
+    _ticker?.cancel();
+    if (widget.profile.isActive && !widget.profile.isManualOnly) {
+      _ticker = Timer.periodic(
+        const Duration(seconds: 30),
+        (_) { if (mounted) setState(() {}); },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profile = widget.profile;
+    final unlocked = profile.isActive && profile.areRequirementsMet;
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
           color: kSurface,
@@ -653,85 +785,237 @@ class _ProfileCard extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Icon ─────────────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: profile.isActive
-                    ? profile.color.withValues(alpha: 0.15)
-                    : kBorder,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                profile.profileIcon.icon,
-                size: 24,
-                color:
-                    profile.isActive ? profile.color : kTextSecondary,
-              ),
-            ),
-            const SizedBox(width: 14),
+            Row(
+              children: [
+                // ── Icon ─────────────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: profile.isActive
+                        ? profile.color.withValues(alpha: 0.15)
+                        : kBorder,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    profile.profileIcon.icon,
+                    size: 24,
+                    color:
+                        profile.isActive ? profile.color : kTextSecondary,
+                  ),
+                ),
+                const SizedBox(width: 14),
 
-            // ── Name + subtitle ──────────────────────────────────────
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    profile.name,
-                    style: const TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                // ── Name + subtitle ──────────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: const TextStyle(
+                          color: kTextPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        profile.subtitle,
+                        style: const TextStyle(
+                            color: kTextSecondary, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // ── Lock / Unlock indicator ────────────────────────────
+                if (profile.isActive)
+                  Tooltip(
+                    message: profile.requirementReason,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: (unlocked
+                                ? const Color(0xFF43A047)
+                                : profile.color)
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        unlocked
+                            ? Icons.lock_open_rounded
+                            : Icons.lock_rounded,
+                        size: 18,
+                        color: unlocked
+                            ? const Color(0xFF43A047)
+                            : profile.color,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    profile.subtitle,
-                    style: const TextStyle(color: kTextSecondary, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                if (profile.isActive) const SizedBox(width: 8),
+
+                // ── Toggle ───────────────────────────────────────────────
+                GestureDetector(
+                  onTap: widget.onToggle,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    width: 52,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: profile.isActive
+                          ? profile.color
+                          : kBorder,
+                    ),
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 250),
+                      alignment: profile.isActive
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: const BoxDecoration(
+                          color: kTextPrimary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
                   ),
+                ),
+              ],
+            ),
+
+            // ── Mode chips ─────────────────────────────────────────────
+            if (profile.scheduleEnabled ||
+                profile.usageLimitEnabled ||
+                profile.taskModeEnabled) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (profile.scheduleEnabled)
+                    _ModeChip(
+                      icon: Icons.schedule_rounded,
+                      label: S.current.scheduleTitle,
+                      color: profile.color,
+                      isActive: profile.isActive,
+                    ),
+                  if (profile.usageLimitEnabled)
+                    _ModeChip(
+                      icon: Icons.timer_rounded,
+                      label: S.current.usageLimitTitle,
+                      color: profile.color,
+                      isActive: profile.isActive,
+                    ),
+                  if (profile.taskModeEnabled)
+                    _ModeChip(
+                      icon: Icons.checklist_rounded,
+                      label: S.current.taskModeTitle,
+                      color: profile.color,
+                      isActive: profile.isActive,
+                    ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
+            ],
 
-            // ── Toggle ───────────────────────────────────────────────
-            GestureDetector(
-              onTap: onToggle,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 52,
-                height: 30,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: profile.isActive
-                      ? profile.color
-                      : kBorder,
-                ),
-                child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 250),
-                  alignment: profile.isActive
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: const BoxDecoration(
-                      color: kTextPrimary,
-                      shape: BoxShape.circle,
+            // ── Inline task list ───────────────────────────────────────
+            if (profile.taskModeEnabled && profile.tasks.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              const Divider(color: kBorder, height: 1),
+              const SizedBox(height: 8),
+              ...profile.tasks.map((task) => GestureDetector(
+                    onTap: () {
+                      ref
+                          .read(profilesProvider.notifier)
+                          .toggleTask(profile.id, task.id);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            task.isDone
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            size: 18,
+                            color: task.isDone
+                                ? profile.color
+                                : kTextSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              task.title,
+                              style: TextStyle(
+                                color: task.isDone
+                                    ? kTextSecondary
+                                    : kTextPrimary,
+                                fontSize: 13,
+                                decoration: task.isDone
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                decorationColor: kTextSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
+                  )),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Small pill showing an active mode.
+class _ModeChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool isActive;
+
+  const _ModeChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = isActive ? color : kTextSecondary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: chipColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(color: chipColor, fontSize: 11),
+          ),
+        ],
       ),
     );
   }
@@ -753,7 +1037,7 @@ class _ProfileDetailPageShell extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         backgroundColor: kBg,
-        body: Center(child: Text('Error: $e')),
+        body: Center(child: Text(S.current.errorGeneric(e))),
       ),
       data: (profiles) {
         final profile = profiles.where((p) => p.id == profileId).firstOrNull;
@@ -833,7 +1117,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     final notifier = ref.read(profilesProvider.notifier);
     await notifier.updateProfile(widget.profile.copyWith(
       name: _nameController.text.trim().isEmpty
-          ? 'Untitled'
+          ? S.current.untitled
           : _nameController.text.trim(),
       colorValue: _selectedColorValue,
       iconLabel: _selectedIconLabel,
@@ -858,6 +1142,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   Widget build(BuildContext context) {
     final p = widget.profile;
     final accent = Color(_selectedColorValue);
+    final locked = p.isActive;
 
     return Scaffold(
       backgroundColor: kBg,
@@ -878,11 +1163,12 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     },
                   ),
                   const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded,
-                        color: kTextSecondary),
-                    onPressed: () => _confirmDelete(context),
-                  ),
+                  if (!p.isActive)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: kTextSecondary),
+                      onPressed: () => _confirmDelete(context),
+                    ),
                 ],
               ),
             ),
@@ -913,14 +1199,15 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     TextField(
                       controller: _nameController,
                       textAlign: TextAlign.center,
+                      readOnly: locked,
                       style: const TextStyle(
                         color: kTextPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Profile Name',
+                        hintText: S.current.profileNamePlaceholder,
                         hintStyle: TextStyle(color: kTextSecondary),
                       ),
                       onChanged: (_) => _save(),
@@ -928,124 +1215,142 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     const SizedBox(height: 8),
 
                     // ── Color picker ────────────────────────────────────
-                    _SectionLabel('Color'),
+                    _SectionLabel(S.current.sectionColor),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: ProfileColor.palette.map((pc) {
-                        final isSelected =
-                            pc.color.toARGB32() == _selectedColorValue;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() =>
-                                _selectedColorValue = pc.color.toARGB32());
-                            _save();
-                          },
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: pc.color,
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(color: kTextPrimary, width: 2.5)
-                                  : null,
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check,
-                                    color: kTextPrimary, size: 18)
-                                : null,
-                          ),
-                        );
-                      }).toList(),
+                    IgnorePointer(
+                      ignoring: locked,
+                      child: Opacity(
+                        opacity: locked ? 0.5 : 1.0,
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: ProfileColor.palette.map((pc) {
+                            final isSelected =
+                                pc.color.toARGB32() == _selectedColorValue;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() =>
+                                    _selectedColorValue = pc.color.toARGB32());
+                                _save();
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: pc.color,
+                                  shape: BoxShape.circle,
+                                  border: isSelected
+                                      ? Border.all(color: kTextPrimary, width: 2.5)
+                                      : null,
+                                ),
+                                child: isSelected
+                                    ? const Icon(Icons.check,
+                                        color: kTextPrimary, size: 18)
+                                    : null,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
                     // ── Icon picker ─────────────────────────────────────
-                    _SectionLabel('Icon'),
+                    _SectionLabel(S.current.sectionIcon),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: ProfileIcon.options.map((pi) {
-                        final isSelected = pi.label == _selectedIconLabel;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() => _selectedIconLabel = pi.label);
-                            _save();
-                          },
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? accent.withValues(alpha: 0.2)
-                                  : kSurface,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: isSelected ? accent : kBorder,
+                    IgnorePointer(
+                      ignoring: locked,
+                      child: Opacity(
+                        opacity: locked ? 0.5 : 1.0,
+                        child: Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: ProfileIcon.options.map((pi) {
+                            final isSelected = pi.label == _selectedIconLabel;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() => _selectedIconLabel = pi.label);
+                                _save();
+                              },
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? accent.withValues(alpha: 0.2)
+                                      : kSurface,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected ? accent : kBorder,
+                                  ),
+                                ),
+                                child: Icon(pi.icon,
+                                    size: 22,
+                                    color: isSelected ? accent : kTextSecondary),
                               ),
-                            ),
-                            child: Icon(pi.icon,
-                                size: 22,
-                                color: isSelected ? accent : kTextSecondary),
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
 
                     // ── Select Apps ─────────────────────────────────────
-                    _SectionLabel('Apps'),
+                    _SectionLabel(S.current.sectionApps),
                     const SizedBox(height: 8),
-                    _SectionCard(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(kRadius),
-                        onTap: () async {
-                          await ref
-                              .read(profilesProvider.notifier)
-                              .pickAppsForProfile(p.id);
-                          // Prompt PIN setup after first app selection
-                          if (mounted) {
-                            final notifier =
-                                ref.read(profilesProvider.notifier);
-                            final hasPin = await notifier.hasPinSet();
-                            if (!hasPin && mounted) {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => _PinSetupDialog(
-                                  onSave: (pin) => notifier.savePin(pin),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                          child: Row(
-                            children: [
-                              Icon(Icons.apps_rounded,
-                                  color: accent, size: 22),
-                              const SizedBox(width: 12),
-                              Text(
-                                p.hasAppsSelected
-                                    ? '${p.appCount} apps selected'
-                                    : 'Select Apps to Block',
-                                style: TextStyle(
-                                  color: p.hasAppsSelected
-                                      ? kTextPrimary
-                                      : kTextSecondary,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                    IgnorePointer(
+                      ignoring: locked,
+                      child: Opacity(
+                        opacity: locked ? 0.5 : 1.0,
+                        child: _SectionCard(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(kRadius),
+                            onTap: () async {
+                              await ref
+                                  .read(profilesProvider.notifier)
+                                  .pickAppsForProfile(p.id);
+                              // Prompt PIN setup after first app selection
+                              if (mounted) {
+                                final notifier =
+                                    ref.read(profilesProvider.notifier);
+                                final hasPin = await notifier.hasPinSet();
+                                if (!hasPin && mounted) {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (_) => _PinSetupDialog(
+                                      onSave: (pin) => notifier.savePin(pin),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.apps_rounded,
+                                      color: accent, size: 22),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    p.hasAppsSelected
+                                        ? S.current.appsSelected(p.appCount)
+                                        : S.current.selectAppsToBlock,
+                                    style: TextStyle(
+                                      color: p.hasAppsSelected
+                                          ? kTextPrimary
+                                          : kTextSecondary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Icon(Icons.chevron_right_rounded,
+                                      color: kTextSecondary, size: 22),
+                                ],
                               ),
-                              const Spacer(),
-                              Icon(Icons.chevron_right_rounded,
-                                  color: kTextSecondary, size: 22),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -1054,109 +1359,122 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                     // ── Usage Stats ─────────────────────────────────────
                     if (p.hasAppsSelected) ...[
-                      _SectionLabel('Usage Stats'),
+                      _SectionLabel(S.current.sectionUsageStats),
                       const SizedBox(height: 8),
                       _ProfileUsageSection(profile: p, accent: accent),
                       const SizedBox(height: 24),
                     ],
 
                     // ── Block Rules (combinable) ────────────────────────
-                    _SectionLabel('Block Rules'),
+                    _SectionLabel(S.current.sectionBlockRules),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Enable one or both. With neither, use Block Now for manual control.',
-                      style: TextStyle(color: kTextSecondary, fontSize: 12),
+                    Text(
+                      locked
+                          ? S.current.settingsLockedWhileActive
+                          : S.current.blockRulesDescription,
+                      style: TextStyle(
+                        color: locked ? kAccent.withValues(alpha: 0.8) : kTextSecondary,
+                        fontSize: 12,
+                        fontStyle: locked ? FontStyle.italic : FontStyle.normal,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
                     // ── Schedule toggle + config ────────────────────────
                     _RuleToggleCard(
                       icon: Icons.calendar_today_rounded,
-                      title: 'Schedule',
-                      description: 'Hard-block during a daily time window',
+                      title: S.current.scheduleTitle,
+                      description: S.current.scheduleDescription,
                       enabled: _scheduleEnabled,
                       accent: accent,
+                      locked: locked,
                       onToggle: (v) {
                         setState(() => _scheduleEnabled = v);
                         _save();
                       },
                     ),
                     if (_scheduleEnabled) ...[
-                      _SectionCard(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      IgnorePointer(
+                        ignoring: locked,
+                        child: Opacity(
+                          opacity: locked ? 0.5 : 1.0,
+                          child: _SectionCard(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.access_time_rounded,
-                                      color: accent, size: 20),
-                                  const SizedBox(width: 8),
-                                  const Text('Schedule',
-                                      style: TextStyle(
-                                          color: kTextPrimary,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600)),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.access_time_rounded,
+                                          color: accent, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(S.current.scheduleTitle,
+                                          style: TextStyle(
+                                              color: kTextPrimary,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _TimeTile(
+                                          label: S.current.scheduleStart,
+                                          formatted: _fmt(_startTime),
+                                          onTap: () async {
+                                            final t = await showTimePicker(
+                                              context: context,
+                                              initialTime: _startTime,
+                                              builder: (ctx, child) => Theme(
+                                                data: ThemeData.dark().copyWith(
+                                                  colorScheme: ColorScheme.dark(
+                                                    primary: accent,
+                                                    surface: kSurface,
+                                                  ),
+                                                ),
+                                                child: child!,
+                                              ),
+                                            );
+                                            if (t != null) {
+                                              setState(() => _startTime = t);
+                                              _save();
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _TimeTile(
+                                          label: S.current.scheduleEnd,
+                                          formatted: _fmt(_endTime),
+                                          onTap: () async {
+                                            final t = await showTimePicker(
+                                              context: context,
+                                              initialTime: _endTime,
+                                              builder: (ctx, child) => Theme(
+                                                data: ThemeData.dark().copyWith(
+                                                  colorScheme: ColorScheme.dark(
+                                                    primary: accent,
+                                                    surface: kSurface,
+                                                  ),
+                                                ),
+                                                child: child!,
+                                              ),
+                                            );
+                                            if (t != null) {
+                                              setState(() => _endTime = t);
+                                              _save();
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _TimeTile(
-                                      label: 'Start',
-                                      formatted: _fmt(_startTime),
-                                      onTap: () async {
-                                        final t = await showTimePicker(
-                                          context: context,
-                                          initialTime: _startTime,
-                                          builder: (ctx, child) => Theme(
-                                            data: ThemeData.dark().copyWith(
-                                              colorScheme: ColorScheme.dark(
-                                                primary: accent,
-                                                surface: kSurface,
-                                              ),
-                                            ),
-                                            child: child!,
-                                          ),
-                                        );
-                                        if (t != null) {
-                                          setState(() => _startTime = t);
-                                          _save();
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _TimeTile(
-                                      label: 'End',
-                                      formatted: _fmt(_endTime),
-                                      onTap: () async {
-                                        final t = await showTimePicker(
-                                          context: context,
-                                          initialTime: _endTime,
-                                          builder: (ctx, child) => Theme(
-                                            data: ThemeData.dark().copyWith(
-                                              colorScheme: ColorScheme.dark(
-                                                primary: accent,
-                                                surface: kSurface,
-                                              ),
-                                            ),
-                                            child: child!,
-                                          ),
-                                        );
-                                        if (t != null) {
-                                          setState(() => _endTime = t);
-                                          _save();
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -1167,94 +1485,101 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     // ── Usage Limit toggle + config ─────────────────────
                     _RuleToggleCard(
                       icon: Icons.timer_rounded,
-                      title: 'Usage Limit',
-                      description: 'Soft-block after a daily screen-time budget',
+                      title: S.current.usageLimitTitle,
+                      description: S.current.usageLimitDescription,
                       enabled: _usageLimitEnabled,
                       accent: accent,
+                      locked: locked,
                       onToggle: (v) {
                         setState(() => _usageLimitEnabled = v);
                         _save();
                       },
                     ),
                     if (_usageLimitEnabled) ...[
-                      _SectionCard(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+                      IgnorePointer(
+                        ignoring: locked,
+                        child: Opacity(
+                          opacity: locked ? 0.5 : 1.0,
+                          child: _SectionCard(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.timer_outlined,
-                                      color: accent, size: 20),
-                                  const SizedBox(width: 8),
-                                  const Text('Daily Limit',
-                                      style: TextStyle(
-                                          color: kTextPrimary,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600)),
-                                  const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: kBorder,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${_usageLimitMinutes}m',
-                                      style: const TextStyle(
-                                        color: kTextPrimary,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
+                                  Row(
+                                    children: [
+                                      Icon(Icons.timer_outlined,
+                                          color: accent, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(S.current.dailyLimit,
+                                          style: TextStyle(
+                                              color: kTextPrimary,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w600)),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: kBorder,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          '${_usageLimitMinutes}m',
+                                          style: const TextStyle(
+                                            color: kTextPrimary,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SliderTheme(
+                                    data: SliderThemeData(
+                                      activeTrackColor: accent,
+                                      inactiveTrackColor: kBorder,
+                                      thumbColor: kTextPrimary,
+                                      overlayColor:
+                                          accent.withValues(alpha: 0.15),
+                                      trackHeight: 4,
+                                      thumbShape: const RoundSliderThumbShape(
+                                          enabledThumbRadius: 8),
+                                    ),
+                                    child: Slider(
+                                      value: _usageLimitMinutes.toDouble(),
+                                      min: 5,
+                                      max: 180,
+                                      divisions: 35,
+                                      onChanged: (v) {
+                                        setState(() =>
+                                            _usageLimitMinutes = v.toInt());
+                                      },
+                                      onChangeEnd: (_) => _save(),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(horizontal: 8),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(S.current.sliderMin,
+                                            style: TextStyle(
+                                                color: kTextSecondary,
+                                                fontSize: 11)),
+                                        Text(S.current.sliderMax,
+                                            style: TextStyle(
+                                                color: kTextSecondary,
+                                                fontSize: 11)),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
-                              SliderTheme(
-                                data: SliderThemeData(
-                                  activeTrackColor: accent,
-                                  inactiveTrackColor: kBorder,
-                                  thumbColor: kTextPrimary,
-                                  overlayColor:
-                                      accent.withValues(alpha: 0.15),
-                                  trackHeight: 4,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8),
-                                ),
-                                child: Slider(
-                                  value: _usageLimitMinutes.toDouble(),
-                                  min: 5,
-                                  max: 180,
-                                  divisions: 35,
-                                  onChanged: (v) {
-                                    setState(() =>
-                                        _usageLimitMinutes = v.toInt());
-                                  },
-                                  onChangeEnd: (_) => _save(),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: const [
-                                    Text('5 min',
-                                        style: TextStyle(
-                                            color: kTextSecondary,
-                                            fontSize: 11)),
-                                    Text('3 hrs',
-                                        style: TextStyle(
-                                            color: kTextSecondary,
-                                            fontSize: 11)),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -1266,10 +1591,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     // ── Task Mode toggle + task list ────────────────────
                     _RuleToggleCard(
                       icon: Icons.checklist_rounded,
-                      title: 'Task Mode',
-                      description: 'Block until all tasks are completed',
+                      title: S.current.taskModeTitle,
+                      description: S.current.taskModeDescription,
                       enabled: _taskModeEnabled,
                       accent: accent,
+                      locked: locked,
                       onToggle: (v) {
                         setState(() => _taskModeEnabled = v);
                         _save();
@@ -1288,7 +1614,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     // ── Activate / Deactivate ───────────────────────────
                     if (p.isActive)
                       _FullWidthButton(
-                        label: 'Deactivate Shield',
+                        label: S.current.deactivateShield,
                         icon: Icons.shield_outlined,
                         color: kTextSecondary,
                         bgColor: kSurface,
@@ -1314,8 +1640,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     else
                       _FullWidthButton(
                         label: p.hasAppsSelected
-                            ? 'Activate Shield'
-                            : 'Select Apps to Activate',
+                            ? S.current.activateShield
+                            : S.current.selectAppsToActivate,
                         icon: p.hasAppsSelected
                             ? Icons.shield_rounded
                             : Icons.apps_rounded,
@@ -1329,9 +1655,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                             : () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text(
-                                      'No apps in this group — select apps first',
-                                      style: TextStyle(color: kTextPrimary),
+                                    content: Text(
+                                      S.current.noAppsWarning,
+                                      style: const TextStyle(color: kTextPrimary),
                                     ),
                                     backgroundColor: kSurface,
                                     behavior: SnackBarBehavior.floating,
@@ -1363,17 +1689,17 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           borderRadius: BorderRadius.circular(kRadius),
           side: const BorderSide(color: kBorder),
         ),
-        title: const Text('Delete Profile',
+        title: Text(S.current.deleteProfile,
             style: TextStyle(color: kTextPrimary)),
         content: Text(
-          'Delete "${widget.profile.name}"? This cannot be undone.',
+          S.current.deleteProfileConfirm(widget.profile.name),
           style: const TextStyle(color: kTextSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child:
-                const Text('Cancel', style: TextStyle(color: kTextSecondary)),
+                Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
           ),
           TextButton(
             onPressed: () async {
@@ -1384,7 +1710,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
               if (context.mounted) Navigator.of(context).pop();
             },
             child:
-                const Text('Delete', style: TextStyle(color: kAccent)),
+                Text(S.current.delete, style: TextStyle(color: kAccent)),
           ),
         ],
       ),
@@ -1437,6 +1763,7 @@ class _RuleToggleCard extends StatelessWidget {
   final String description;
   final bool enabled;
   final Color accent;
+  final bool locked;
   final ValueChanged<bool> onToggle;
 
   const _RuleToggleCard({
@@ -1445,71 +1772,84 @@ class _RuleToggleCard extends StatelessWidget {
     required this.description,
     required this.enabled,
     required this.accent,
+    this.locked = false,
     required this.onToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: enabled ? accent.withValues(alpha: 0.08) : kSurface,
-        borderRadius: BorderRadius.circular(kRadius),
-        border: Border.all(
-          color: enabled ? accent.withValues(alpha: 0.4) : kBorder,
+    return Opacity(
+      opacity: locked ? 0.6 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: enabled ? accent.withValues(alpha: 0.08) : kSurface,
+          borderRadius: BorderRadius.circular(kRadius),
+          border: Border.all(
+            color: enabled ? accent.withValues(alpha: 0.4) : kBorder,
+          ),
         ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: enabled ? accent : kTextSecondary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: enabled ? kTextPrimary : kTextSecondary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: enabled ? accent : kTextSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: enabled ? kTextPrimary : kTextSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (locked) ...[
+                        const SizedBox(width: 6),
+                        Icon(Icons.lock_rounded, size: 14,
+                            color: kTextSecondary.withValues(alpha: 0.6)),
+                      ],
+                    ],
                   ),
-                ),
-                Text(
-                  description,
-                  style: const TextStyle(color: kTextSecondary, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => onToggle(!enabled),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 48,
-              height: 28,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: enabled ? accent : kBorder,
+                  Text(
+                    description,
+                    style: const TextStyle(color: kTextSecondary, fontSize: 11),
+                  ),
+                ],
               ),
-              child: AnimatedAlign(
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: locked ? null : () => onToggle(!enabled),
+              child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
-                alignment:
-                    enabled ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: const BoxDecoration(
-                    color: kTextPrimary,
-                    shape: BoxShape.circle,
+                width: 48,
+                height: 28,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: enabled ? accent : kBorder,
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 250),
+                  alignment:
+                      enabled ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: const BoxDecoration(
+                      color: kTextPrimary,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1649,21 +1989,21 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
         borderRadius: BorderRadius.circular(kRadius),
         side: const BorderSide(color: kBorder),
       ),
-      title: const Text('Set Deactivation PIN',
+      title: Text(S.current.setPinTitle,
           style: TextStyle(color: kTextPrimary, fontSize: 18)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Hand your phone to a trusted person.\nThey set a PIN that is required to deactivate any shield.',
+          Text(
+            S.current.setPinDescription,
             style: TextStyle(color: kTextSecondary, fontSize: 13),
           ),
           const SizedBox(height: 20),
-          _buildField(_pinController, 'Enter PIN', _obscurePin,
+          _buildField(_pinController, S.current.enterPin, _obscurePin,
               () => setState(() => _obscurePin = !_obscurePin)),
           const SizedBox(height: 12),
-          _buildField(_confirmController, 'Confirm PIN', _obscureConfirm,
+          _buildField(_confirmController, S.current.confirmPin, _obscureConfirm,
               () => setState(() => _obscureConfirm = !_obscureConfirm)),
           if (_error != null) ...[
             const SizedBox(height: 8),
@@ -1678,17 +2018,17 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
             final pin = _pinController.text.trim();
             final confirm = _confirmController.text.trim();
             if (pin.length < 4) {
-              setState(() => _error = 'PIN must be at least 4 characters');
+              setState(() => _error = S.current.pinTooShort);
               return;
             }
             if (pin != confirm) {
-              setState(() => _error = 'PINs do not match');
+              setState(() => _error = S.current.pinsMismatch);
               return;
             }
             await widget.onSave(pin);
             if (mounted) Navigator.pop(context);
           },
-          child: const Text('Save PIN',
+          child: Text(S.current.savePin,
               style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
         ),
       ],
@@ -1805,24 +2145,24 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       ),
       title: Text(
         _step == _DeactivateStep.waiting
-            ? 'Cooling Down…'
+            ? S.current.coolingDown
             : _pinRequired
-                ? 'Enter PIN to Deactivate'
-                : 'Confirm Deactivation',
+                ? S.current.enterPinToDeactivate
+                : S.current.confirmDeactivation,
         style: const TextStyle(color: kTextPrimary, fontSize: 18),
       ),
       content: _step == _DeactivateStep.waiting
           ? _buildWaiting()
           : _pinRequired
               ? _buildPinEntry()
-              : const Text(
-                  'Are you sure you want to deactivate?',
+              : Text(
+                  S.current.areYouSureDeactivate,
                   style: TextStyle(color: kTextSecondary, fontSize: 14),
                 ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: kTextSecondary)),
+          child: Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
         ),
         if (_step == _DeactivateStep.enterPin)
           TextButton(
@@ -1830,7 +2170,7 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
               Navigator.pop(context);
               widget.onConfirm();
             },
-            child: const Text('Deactivate',
+            child: Text(S.current.deactivateAction,
                 style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
           ),
       ],
@@ -1841,8 +2181,8 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Take a moment to reconsider.\nThe shield will be deactivatable after the timer.',
+        Text(
+          S.current.cooldownDescription,
           style: TextStyle(color: kTextSecondary, fontSize: 13),
           textAlign: TextAlign.center,
         ),
@@ -1874,8 +2214,8 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Enter the PIN set by your trusted person.',
+        Text(
+          S.current.enterTrustedPersonPin,
           style: TextStyle(color: kTextSecondary, fontSize: 13),
         ),
         const SizedBox(height: 16),
@@ -1885,7 +2225,7 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
           keyboardType: TextInputType.visiblePassword,
           style: const TextStyle(color: kTextPrimary, fontSize: 16),
           decoration: InputDecoration(
-            labelText: 'PIN',
+            labelText: S.current.pinLabel,
             labelStyle:
                 const TextStyle(color: kTextSecondary, fontSize: 13),
             filled: true,
@@ -1921,7 +2261,7 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   Future<void> _verifyAndDeactivate() async {
     final pin = _pinController.text.trim();
     if (pin.isEmpty) {
-      setState(() => _pinError = 'Enter your PIN');
+      setState(() => _pinError = S.current.enterYourPin);
       return;
     }
     final valid = await widget.onVerifyPin(pin);
@@ -1929,7 +2269,7 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       if (mounted) Navigator.pop(context);
       widget.onConfirm();
     } else {
-      setState(() => _pinError = 'Incorrect PIN');
+      setState(() => _pinError = S.current.incorrectPin);
     }
   }
 }
@@ -1980,9 +2320,9 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
               Icon(Icons.checklist_rounded,
                   color: widget.accent, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Tasks',
+                  S.current.tasks,
                   style: TextStyle(
                     color: kTextPrimary,
                     fontSize: 15,
@@ -2091,8 +2431,8 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                 ),
               )),
 
-          // Add-task row
-          ...[
+          // Add-task row (only when shield is NOT active)
+          if (!isActive) ...[
             const SizedBox(height: 4),
             Row(
               children: [
@@ -2102,7 +2442,7 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                     style: const TextStyle(
                         color: kTextPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Add a task…',
+                      hintText: S.current.addTaskHint,
                       hintStyle: const TextStyle(
                           color: kTextSecondary, fontSize: 14),
                       isDense: true,
@@ -2155,8 +2495,8 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                 Expanded(
                   child: Text(
                     doneCount == tasks.length
-                        ? 'All tasks done — shield will deactivate'
-                        : '${tasks.length - doneCount} task${tasks.length - doneCount == 1 ? '' : 's'} remaining to unlock',
+                        ? S.current.allTasksDoneNote
+                        : S.current.tasksRemainingNote(tasks.length - doneCount),
                     style: const TextStyle(
                       color: kTextSecondary,
                       fontSize: 12,
@@ -2169,10 +2509,10 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
           ],
 
           if (tasks.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'Add tasks that must be completed before apps unlock.',
+                S.current.emptyTasksHint,
                 style: TextStyle(color: kTextSecondary, fontSize: 12),
               ),
             ),
@@ -2229,7 +2569,7 @@ class _ProfileUsageSection extends StatelessWidget {
                 Expanded(
                   child: _MiniStat(
                     icon: Icons.phone_android_rounded,
-                    label: 'Today',
+                    label: S.current.today,
                     value: _fmtMin(stats.todayTotalMinutes),
                     color: accent,
                   ),
@@ -2238,7 +2578,7 @@ class _ProfileUsageSection extends StatelessWidget {
                 Expanded(
                   child: _MiniStat(
                     icon: Icons.show_chart_rounded,
-                    label: 'Daily Avg',
+                    label: S.current.dailyAvg,
                     value: _fmtMin(stats.weekAvgMinutes),
                     color: const Color(0xFF1E88E5),
                   ),
@@ -2247,7 +2587,7 @@ class _ProfileUsageSection extends StatelessWidget {
                 Expanded(
                   child: _MiniStat(
                     icon: Icons.timer_off_rounded,
-                    label: 'Saved',
+                    label: S.current.saved,
                     value: _fmtMin(savedMinutes),
                     color: Colors.green,
                   ),
@@ -2257,8 +2597,8 @@ class _ProfileUsageSection extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ── Weekly bar chart ────────────────────────────────────────
-            const Text(
-              'Last 7 Days',
+            Text(
+              S.current.last7Days,
               style: TextStyle(
                 color: kTextSecondary,
                 fontSize: 12,
@@ -2278,8 +2618,8 @@ class _ProfileUsageSection extends StatelessWidget {
             // ── Per-app breakdown ───────────────────────────────────────
             Row(
               children: [
-                const Text(
-                  'App Breakdown',
+                Text(
+                  S.current.appBreakdown,
                   style: TextStyle(
                     color: kTextSecondary,
                     fontSize: 12,
@@ -2288,7 +2628,7 @@ class _ProfileUsageSection extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'Today',
+                  S.current.today,
                   style: TextStyle(
                     color: kTextSecondary.withValues(alpha: 0.6),
                     fontSize: 11,
@@ -2309,7 +2649,7 @@ class _ProfileUsageSection extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '+${stats.appUsages.length - 5} more apps',
+                  S.current.moreApps(stats.appUsages.length - 5),
                   style: const TextStyle(color: kTextSecondary, fontSize: 12),
                 ),
               ),
@@ -2370,7 +2710,7 @@ class _WeekChart extends StatelessWidget {
   final Color accent;
   const _WeekChart({required this.history, required this.accent});
 
-  static const _dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static final _dayLabels = S.current.dayLabels;
 
   @override
   Widget build(BuildContext context) {
