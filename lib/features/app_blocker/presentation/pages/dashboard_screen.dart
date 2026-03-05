@@ -291,6 +291,21 @@ class _DashboardBody extends ConsumerWidget {
                         ),
                       ),
                     );
+                  } else if (profile.taskModeEnabled &&
+                      profile.tasks.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          S.current.noTasksWarning,
+                          style: TextStyle(color: kTextPrimary),
+                        ),
+                        backgroundColor: kSurface,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
                   } else {
                     await notifier.activateProfile(profile.id);
                   }
@@ -1742,39 +1757,57 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         },
                       )
                     else
-                      _FullWidthButton(
-                        label: p.hasAppsSelected
-                            ? S.current.activateShield
-                            : S.current.selectAppsToActivate,
-                        icon: p.hasAppsSelected
-                            ? Icons.shield_rounded
-                            : Icons.apps_rounded,
-                        color: p.hasAppsSelected ? kTextPrimary : kTextSecondary,
-                        bgColor: p.hasAppsSelected ? accent : kSurface,
-                        borderColor: p.hasAppsSelected ? null : kBorder,
-                        onPressed: p.hasAppsSelected
-                            ? () {
-                                HapticFeedback.heavyImpact();
-                                ref
-                                    .read(profilesProvider.notifier)
-                                    .activateProfile(p.id);
-                              }
-                            : () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      S.current.noAppsWarning,
-                                      style: TextStyle(color: kTextPrimary),
+                      Builder(builder: (_) {
+                        final canActivate = p.hasAppsSelected &&
+                            !(_taskModeEnabled && p.tasks.isEmpty);
+                        final String buttonLabel;
+                        final IconData buttonIcon;
+                        final String? warningMsg;
+
+                        if (!p.hasAppsSelected) {
+                          buttonLabel = S.current.selectAppsToActivate;
+                          buttonIcon = Icons.apps_rounded;
+                          warningMsg = S.current.noAppsWarning;
+                        } else if (_taskModeEnabled && p.tasks.isEmpty) {
+                          buttonLabel = S.current.activateShield;
+                          buttonIcon = Icons.shield_rounded;
+                          warningMsg = S.current.noTasksWarning;
+                        } else {
+                          buttonLabel = S.current.activateShield;
+                          buttonIcon = Icons.shield_rounded;
+                          warningMsg = null;
+                        }
+
+                        return _FullWidthButton(
+                          label: buttonLabel,
+                          icon: buttonIcon,
+                          color: canActivate ? kTextPrimary : kTextSecondary,
+                          bgColor: canActivate ? accent : kSurface,
+                          borderColor: canActivate ? null : kBorder,
+                          onPressed: canActivate
+                              ? () {
+                                  HapticFeedback.heavyImpact();
+                                  ref
+                                      .read(profilesProvider.notifier)
+                                      .activateProfile(p.id);
+                                }
+                              : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        warningMsg!,
+                                        style: TextStyle(color: kTextPrimary),
+                                      ),
+                                      backgroundColor: kSurface,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                     ),
-                                    backgroundColor: kSurface,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              },
-                      ),
+                                  );
+                                },
+                        );
+                      }),
 
                     const SizedBox(height: 32),
                   ],

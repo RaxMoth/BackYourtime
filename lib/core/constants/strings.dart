@@ -78,6 +78,7 @@ abstract class S {
   String get noProfilesYet;
   String get noProfilesTapPlus;
   String get noAppsWarning;
+  String get noTasksWarning;
 
   // ── Summary Card ─────────────────────────────────────────────────────────
   String get allShieldsActive;
@@ -223,6 +224,7 @@ class _En extends S {
   @override String get noProfilesYet => 'No profiles yet';
   @override String get noProfilesTapPlus => 'Tap + to create your first blocking profile.';
   @override String get noAppsWarning => 'No apps in this group — select apps first';
+  @override String get noTasksWarning => 'Add at least one task before activating task mode';
 
   @override String get allShieldsActive => 'All Shields Active';
   @override String someShieldsActive(int active, int total) => '$active of $total Active';
@@ -352,6 +354,7 @@ class _De extends S {
   @override String get noProfilesYet => 'Noch keine Profile';
   @override String get noProfilesTapPlus => 'Tippe auf +, um dein erstes Blockier-Profil zu erstellen.';
   @override String get noAppsWarning => 'Keine Apps in dieser Gruppe — wähle zuerst Apps aus';
+  @override String get noTasksWarning => 'Füge mindestens eine Aufgabe hinzu, bevor du den Aufgabenmodus aktivierst';
 
   @override String get allShieldsActive => 'Alle Schilde aktiv';
   @override String someShieldsActive(int active, int total) => '$active von $total aktiv';
@@ -481,6 +484,7 @@ class _Es extends S {
   @override String get noProfilesYet => 'Sin perfiles aún';
   @override String get noProfilesTapPlus => 'Toca + para crear tu primer perfil de bloqueo.';
   @override String get noAppsWarning => 'No hay apps en este grupo — selecciona apps primero';
+  @override String get noTasksWarning => 'Añade al menos una tarea antes de activar el modo de tareas';
 
   @override String get allShieldsActive => 'Todos los escudos activos';
   @override String someShieldsActive(int active, int total) => '$active de $total activos';
@@ -610,6 +614,7 @@ class _Fr extends S {
   @override String get noProfilesYet => 'Aucun profil';
   @override String get noProfilesTapPlus => 'Appuyez sur + pour créer votre premier profil de blocage.';
   @override String get noAppsWarning => 'Aucune app dans ce groupe — sélectionnez d\'abord des apps';
+  @override String get noTasksWarning => 'Ajoutez au moins une tâche avant d\'activer le mode tâches';
 
   @override String get allShieldsActive => 'Tous les boucliers actifs';
   @override String someShieldsActive(int active, int total) => '$active sur $total actifs';
@@ -739,6 +744,7 @@ class _Hr extends S {
   @override String get noProfilesYet => 'Nema profila';
   @override String get noProfilesTapPlus => 'Dodirni + za izradu prvog profila za blokiranje.';
   @override String get noAppsWarning => 'Nema aplikacija u ovoj grupi — prvo odaberi aplikacije';
+  @override String get noTasksWarning => 'Dodaj barem jedan zadatak prije aktiviranja načina zadataka';
 
   @override String get allShieldsActive => 'Svi štitovi aktivni';
   @override String someShieldsActive(int active, int total) => '$active od $total aktivno';
