@@ -1,101 +1,119 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
+import 'design_tokens.dart';
 
-/// App Theme Configuration
+/// App Theme Configuration — built from [design_tokens.dart].
 class AppTheme {
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        surface: AppColors.white,
-        error: AppColors.error,
-      ),
-      scaffoldBackgroundColor: AppColors.greyLight,
-      appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      cardTheme: CardThemeData(
-        color: AppColors.white,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: AppColors.grey),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: AppColors.error),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.black),
-        displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.black),
-        displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.black),
-        headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.black),
-        titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.black),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black),
-        titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.black),
-        bodyLarge: TextStyle(fontSize: 16, color: AppColors.black),
-        bodyMedium: TextStyle(fontSize: 14, color: AppColors.black),
-        bodySmall: TextStyle(fontSize: 12, color: AppColors.grey),
-        labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.white),
-      ),
-    );
-  }
+  AppTheme._();
 
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        surface: AppColors.greyDark,
-        error: AppColors.error,
+      scaffoldBackgroundColor: kBg,
+      colorScheme: const ColorScheme.dark(
+        primary: kAccent,
+        secondary: kAccent,
+        surface: kSurface,
+        error: kAccent,
+        onPrimary: kTextPrimary,
+        onSecondary: kTextPrimary,
+        onSurface: kTextPrimary,
+        outline: kBorder,
       ),
-      scaffoldBackgroundColor: AppColors.black,
-      appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.greyDark,
-        foregroundColor: AppColors.white,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: kBg,
+        foregroundColor: kTextPrimary,
         elevation: 0,
         centerTitle: true,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.greyDark,
-        elevation: 2,
+        color: kSurface,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(kRadius),
+          side: const BorderSide(color: kBorder),
         ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: kBg,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kAccent),
+        ),
+        labelStyle: const TextStyle(color: kTextSecondary, fontSize: 13),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kAccent,
+          foregroundColor: kTextPrimary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: kAccent,
+          foregroundColor: kTextPrimary,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: kAccent),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: kSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(kRadius)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: kSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(kRadius),
+          side: const BorderSide(color: kBorder),
+        ),
+        titleTextStyle: const TextStyle(
+          color: kTextPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+            fontSize: 32, fontWeight: FontWeight.bold, color: kTextPrimary),
+        displayMedium: TextStyle(
+            fontSize: 28, fontWeight: FontWeight.bold, color: kTextPrimary),
+        displaySmall: TextStyle(
+            fontSize: 24, fontWeight: FontWeight.bold, color: kTextPrimary),
+        headlineSmall: TextStyle(
+            fontSize: 20, fontWeight: FontWeight.bold, color: kTextPrimary),
+        titleLarge: TextStyle(
+            fontSize: 18, fontWeight: FontWeight.bold, color: kTextPrimary),
+        titleMedium: TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w600, color: kTextPrimary),
+        titleSmall: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w600, color: kTextPrimary),
+        bodyLarge: TextStyle(fontSize: 16, color: kTextPrimary),
+        bodyMedium: TextStyle(fontSize: 14, color: kTextPrimary),
+        bodySmall: TextStyle(fontSize: 12, color: kTextSecondary),
+        labelLarge: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w500, color: kTextPrimary),
       ),
     );
   }

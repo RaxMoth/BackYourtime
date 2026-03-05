@@ -1,3 +1,2 @@
-/// Barrel file for core/constants
-export 'app_constants.dart';
+// Barrel file for core/constants
 export 'strings.dart';

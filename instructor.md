@@ -6,7 +6,7 @@
 
 ## What You're Building
 
-A feature inside your FlutterBase app (`lib/features/app_blocker/`) that:
+A feature inside your Unspend app (`lib/features/app_blocker/`) that:
 
 - Lets you pick apps to block via the native iOS picker
 - Lets you set a schedule (e.g. block 9am–5pm, repeating daily) or a usage limit (e.g. 30min/day then blocked)
@@ -42,19 +42,19 @@ Open `ios/Runner.xcworkspace` in Xcode before writing any code.
 
 - Select the **Runner** target → **Signing & Capabilities**
 - Add **Family Controls**
-- Add **App Groups** → create: `group.com.example.flutterbase`
+- Add **App Groups** → create: `group.com.maxroth.backyourtime`
 
 ### 1b. Add the DeviceActivity Extension Target
 
 - **File → New → Target → DeviceActivity Monitor Extension**
 - Name: `FocusMonitor`
-- Bundle ID: `com.example.flutterbase.FocusMonitor`
+- Bundle ID: `com.maxroth.backyourtime.FocusMonitor`
 - On creation, Xcode asks to activate the scheme — click **Cancel** (keep Runner as active scheme)
 
 ### 1c. Add Capabilities to the FocusMonitor target
 
 - Select the **FocusMonitor** target → **Signing & Capabilities**
-- Add **App Groups** → select the same group: `group.com.example.flutterbase`
+- Add **App Groups** → select the same group: `group.com.maxroth.backyourtime`
 
 ### 1d. Update Info.plist (ios/Runner/Info.plist)
 
@@ -81,9 +81,9 @@ import DeviceActivity
 import Foundation
 
 class ScreenTimeChannel {
-    static let channelName = "com.example.flutterbase/screentime"
+    static let channelName = "com.maxroth.backyourtime/screentime"
     private let store = ManagedSettingsStore()
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.example.flutterbase")!
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
@@ -232,7 +232,7 @@ import Foundation
 
 class AppPickerViewController: UIViewController {
     var onSelectionSaved: (() -> Void)?
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.example.flutterbase")!
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -318,7 +318,7 @@ import FamilyControls
         screenTimeChannel.register(with: registrar)
 
         pickerChannel = FlutterMethodChannel(
-            name: "com.example.flutterbase/apppicker",
+            name: "com.maxroth.backyourtime/apppicker",
             binaryMessenger: registrar.messenger()
         )
         pickerChannel?.setMethodCallHandler { [weak self] call, result in
@@ -358,7 +358,7 @@ import Foundation
 @main
 class FocusMonitor: DeviceActivityMonitor {
     private let store = ManagedSettingsStore()
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.example.flutterbase")!
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     // Called when schedule interval STARTS → apply shield
     override func intervalDidStart(for activity: DeviceActivityName) {
@@ -465,8 +465,8 @@ class BlockerConfig {
 import 'package:flutter/services.dart';
 
 class ScreenTimeDatasource {
-  static const _channel = MethodChannel('com.example.flutterbase/screentime');
-  static const _pickerChannel = MethodChannel('com.example.flutterbase/apppicker');
+  static const _channel = MethodChannel('com.maxroth.backyourtime/screentime');
+  static const _pickerChannel = MethodChannel('com.maxroth.backyourtime/apppicker');
 
   Future<bool> requestAuthorization() async =>
       await _channel.invokeMethod<bool>('requestAuthorization') ?? false;

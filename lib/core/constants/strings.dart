@@ -415,7 +415,7 @@ class _De extends S {
 
   @override String get noAppsSelected => 'Keine Apps ausgewählt';
   @override String subtitleApps(int count) => '$count Apps';
-  @override String subtitleUsageLimit(int minutes) => '${minutes} Min Limit';
+  @override String subtitleUsageLimit(int minutes) => '$minutes Min Limit';
   @override String subtitleTasks(int done, int total) => '$done/$total Aufgaben';
   @override String get subtitleManual => 'Manuell';
   @override String subtitleScheduleRange(String start, String end) => '$start–$end Uhr';

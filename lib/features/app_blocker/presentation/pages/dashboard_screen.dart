@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/profiles_provider.dart';
 import '../../domain/entities/blocker_profile.dart';
 import '../../domain/entities/usage_stats.dart';
-import 'package:flutterbase/core/constants/strings.dart';
-import 'package:flutterbase/core/theme/design_tokens.dart';
-import 'package:flutterbase/shared/providers/locale_provider.dart';
+import 'package:unspend/core/constants/strings.dart';
+import 'package:unspend/core/theme/design_tokens.dart';
+import 'package:unspend/shared/providers/locale_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -138,40 +138,6 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-// ── Helper: routes to profile detail ───────────────────────────────────────
-class _ProfileDetailRoute extends ConsumerWidget {
-  final String profileId;
-  const _ProfileDetailRoute({required this.profileId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Lazy-import to avoid circular deps — the actual screen is in its own file
-    // We use a simple inline widget that delegates.
-    return _InlineProfileDetail(profileId: profileId);
-  }
-}
-
-// It's cleaner to keep the detail in its own file, but we need a tiny stub
-// here so the bottom-sheet -> navigate flow works.
-// The real detail screen will replace this via the router.
-class _InlineProfileDetail extends ConsumerStatefulWidget {
-  final String profileId;
-  const _InlineProfileDetail({required this.profileId});
-
-  @override
-  ConsumerState<_InlineProfileDetail> createState() =>
-      _InlineProfileDetailState();
-}
-
-class _InlineProfileDetailState
-    extends ConsumerState<_InlineProfileDetail> {
-  @override
-  Widget build(BuildContext context) {
-    // Forward to the real profile detail page
-    return const SizedBox.shrink(); // replaced at router level
   }
 }
 
@@ -1329,19 +1295,19 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   .read(profilesProvider.notifier)
                                   .pickAppsForProfile(p.id);
                               // Prompt PIN setup after first app selection
-                              if (mounted) {
-                                final notifier =
-                                    ref.read(profilesProvider.notifier);
-                                final hasPin = await notifier.hasPinSet();
-                                if (!hasPin && mounted) {
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (_) => _PinSetupDialog(
-                                      onSave: (pin) => notifier.savePin(pin),
-                                    ),
-                                  );
-                                }
+                              if (!context.mounted) return;
+                              final notifier =
+                                  ref.read(profilesProvider.notifier);
+                              final hasPin = await notifier.hasPinSet();
+                              if (!context.mounted) return;
+                              if (!hasPin) {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (_) => _PinSetupDialog(
+                                    onSave: (pin) => notifier.savePin(pin),
+                                  ),
+                                );
                               }
                             },
                             child: Padding(
@@ -2049,7 +2015,7 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
               return;
             }
             await widget.onSave(pin);
-            if (mounted) Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
           },
           child: Text(S.current.savePin,
               style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),

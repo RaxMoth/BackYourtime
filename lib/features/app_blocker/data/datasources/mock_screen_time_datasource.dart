@@ -4,7 +4,6 @@ import 'screen_time_datasource.dart';
 /// Use this for UI development on simulator / desktop / web.
 class MockScreenTimeDatasource implements ScreenTimeDatasource {
   bool _shieldActive = false;
-  bool _hasApps = false;
 
   @override
   Future<bool> requestAuthorization() async {
@@ -15,7 +14,6 @@ class MockScreenTimeDatasource implements ScreenTimeDatasource {
   @override
   Future<bool> showAppPicker() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    _hasApps = true;
     return true;
   }
 

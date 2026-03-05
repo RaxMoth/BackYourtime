@@ -1,17 +1,42 @@
-# flutterbase
+# Unspend
 
-A new Flutter project.
+An iOS app blocker built with Flutter. Create blocking profiles with combinable rules (time-of-day schedules, daily usage caps, and always-block), protect settings with a PIN, and keep distracting apps out of reach.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Multi-profile system** — organise blocked apps into named profiles (e.g. "Work Focus", "Bedtime")
+- **Combinable block rules** — schedule, usage limit, and always-block rules can be stacked per profile
+- **PIN protection** — SHA-256 hashed PIN to prevent casual disabling
+- **i18n** — English, German, Spanish, French, Croatian
+- **Dark-only UI** — minimal, high-contrast dark theme with red accent
 
-A few resources to get you started if this is your first Flutter project:
+## Tech Stack
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+| Layer       | Choice                             |
+| ----------- | ---------------------------------- |
+| Framework   | Flutter 3                          |
+| State       | Riverpod (`AsyncNotifierProvider`) |
+| Routing     | GoRouter                           |
+| Persistence | SharedPreferences (JSON)           |
+| Security    | `crypto` (SHA-256 PIN hashing)     |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Project Structure
+
+```
+lib/
+├── main.dart
+├── config/          # router, service setup
+├── core/            # theme, design tokens, i18n strings
+├── features/
+│   └── app_blocker/ # domain entities, datasources, providers, UI
+└── shared/          # locale provider
+```
+
+## Running
+
+```bash
+flutter pub get
+flutter run
+```
+
+> **Note:** ScreenTime integration is currently mocked (`kUseMockScreenTime = true` in the datasource). See `instructor.md` for the native Swift implementation guide.

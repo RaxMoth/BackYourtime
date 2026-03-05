@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutterbase/core/constants/strings.dart';
+import 'package:unspend/core/constants/strings.dart';
 
 // ── Task entity ────────────────────────────────────────────────────────────
 
@@ -168,7 +168,9 @@ class BlockerProfile {
   bool get isInsideScheduleWindow {
     if (!scheduleEnabled ||
         scheduleStartHour == null ||
-        scheduleEndHour == null) return false;
+        scheduleEndHour == null) {
+      return false;
+    }
     final now = TimeOfDay.now();
     final nowMin = now.hour * 60 + now.minute;
     final startMin =
