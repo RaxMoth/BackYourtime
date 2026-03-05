@@ -29,7 +29,7 @@ class BlockerTask {
       };
 
   factory BlockerTask.fromJson(Map<String, dynamic> j) => BlockerTask(
-        id: j['id'] as String,
+        id: j['id'] as String? ?? '',
         title: j['title'] as String? ?? '',
         isDone: j['isDone'] as bool? ?? false,
       );
@@ -313,27 +313,27 @@ class BlockerProfile {
       };
 
   factory BlockerProfile.fromJson(Map<String, dynamic> j) => BlockerProfile(
-        id: j['id'] as String,
+        id: j['id'] as String? ?? '',
         name: j['name'] as String? ?? 'Untitled',
         colorValue: j['colorValue'] as int? ?? 0xFFE53935,
         iconLabel: j['iconLabel'] as String? ?? 'Custom',
         isActive: j['isActive'] as bool? ?? false,
         scheduleEnabled: j['scheduleEnabled'] as bool? ?? false,
-        scheduleStartHour: j['scheduleStartHour'] as int?,
-        scheduleStartMinute: j['scheduleStartMinute'] as int?,
-        scheduleEndHour: j['scheduleEndHour'] as int?,
-        scheduleEndMinute: j['scheduleEndMinute'] as int?,
+        scheduleStartHour: (j['scheduleStartHour'] as int?)?.clamp(0, 23),
+        scheduleStartMinute: (j['scheduleStartMinute'] as int?)?.clamp(0, 59),
+        scheduleEndHour: (j['scheduleEndHour'] as int?)?.clamp(0, 23),
+        scheduleEndMinute: (j['scheduleEndMinute'] as int?)?.clamp(0, 59),
         usageLimitEnabled: j['usageLimitEnabled'] as bool? ?? false,
-        usageLimitMinutes: j['usageLimitMinutes'] as int?,
+        usageLimitMinutes: (j['usageLimitMinutes'] as int?)?.clamp(1, 1440),
         taskModeEnabled: j['taskModeEnabled'] as bool? ?? false,
         tasks: (j['tasks'] as List<dynamic>?)
                 ?.map((e) => BlockerTask.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
         hasAppsSelected: j['hasAppsSelected'] as bool? ?? false,
-        appCount: j['appCount'] as int? ?? 0,
+        appCount: (j['appCount'] as int? ?? 0).clamp(0, 999),
         tasksLastResetDate: j['tasksLastResetDate'] as String?,
         shieldActivatedAt: j['shieldActivatedAt'] as String?,
-        totalSavedMinutes: j['totalSavedMinutes'] as int? ?? 0,
+        totalSavedMinutes: (j['totalSavedMinutes'] as int? ?? 0).clamp(0, 999999),
       );
 }

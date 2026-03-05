@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/profiles_provider.dart';
+import '../providers/shield_activity_provider.dart';
 import '../../domain/entities/blocker_profile.dart';
 import '../../domain/entities/usage_stats.dart';
 import 'package:unspend/core/constants/strings.dart';
@@ -26,6 +27,7 @@ class DashboardScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: kAccent,
         foregroundColor: kTextPrimary,
+        tooltip: S.current.newProfile,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         onPressed: () => _showCreateProfileSheet(context, ref),
         child: const Icon(Icons.add_rounded, size: 28),
@@ -142,7 +144,7 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 }
 
@@ -197,8 +199,8 @@ class _DashboardBody extends ConsumerWidget {
                 ),
                 const SizedBox(height: 14),
 
-                // ── Stats row ──────────────────────────────────────────
-                _StatsRow(profiles: profiles),
+                // ── Collapsible statistics ─────────────────────────────
+                _StatisticsSection(profiles: profiles),
                 const SizedBox(height: 20),
 
                 // ── Section title ──────────────────────────────────────
@@ -307,7 +309,25 @@ class _DashboardBody extends ConsumerWidget {
                       ),
                     );
                   } else {
-                    await notifier.activateProfile(profile.id);
+                    try {
+                      await notifier.activateProfile(profile.id);
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              S.current.errorGeneric('Activation failed'),
+                              style: TextStyle(color: kTextPrimary),
+                            ),
+                            backgroundColor: kSurface,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
               );
@@ -611,6 +631,110 @@ class _DashboardBody extends ConsumerWidget {
   }
 }
 
+// ── Collapsible Statistics Section ─────────────────────────────────────────
+class _StatisticsSection extends StatefulWidget {
+  final List<BlockerProfile> profiles;
+  const _StatisticsSection({required this.profiles});
+
+  @override
+  State<_StatisticsSection> createState() => _StatisticsSectionState();
+}
+
+class _StatisticsSectionState extends State<_StatisticsSection>
+    with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+  late final AnimationController _animCtrl;
+  late final Animation<double> _expandAnim;
+  late final Animation<double> _rotateAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _expandAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
+    _rotateAnim = Tween<double>(begin: 0, end: 0.5).animate(_expandAnim);
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    if (_expanded) {
+      _animCtrl.forward();
+    } else {
+      _animCtrl.reverse();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(kRadius),
+        border: Border.all(color: kBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // ── Header (always visible, tappable) ─────────────────────
+          GestureDetector(
+            onTap: _toggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(Icons.bar_chart_rounded, color: kAccent, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      S.current.statistics,
+                      style: TextStyle(
+                        color: kTextPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  RotationTransition(
+                    turns: _rotateAnim,
+                    child: Icon(Icons.expand_more_rounded,
+                        color: kTextSecondary, size: 22),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Expandable body ───────────────────────────────────────
+          SizeTransition(
+            sizeFactor: _expandAnim,
+            axisAlignment: -1,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _StatsRow(profiles: widget.profiles),
+                  const SizedBox(height: 14),
+                  const _ShieldActivityGrid(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Summary Card ───────────────────────────────────────────────────────────
 class _SummaryCard extends StatelessWidget {
   final int totalProfiles;
@@ -822,6 +946,237 @@ class _StatTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Shield Activity Grid (GitHub-style) ────────────────────────────────────
+class _ShieldActivityGrid extends ConsumerStatefulWidget {
+  const _ShieldActivityGrid();
+
+  @override
+  ConsumerState<_ShieldActivityGrid> createState() =>
+      _ShieldActivityGridState();
+}
+
+class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
+  static const _weeks = 53; // full year
+  static const _cellSize = 13.0;
+  static const _cellGap = 3.0;
+  static const _dayLabelWidth = 28.0;
+
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Jump to the right edge (today) after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncLog = ref.watch(shieldActivityProvider);
+    final log = asyncLog.valueOrNull ?? {};
+    final today = DateTime.now();
+
+    // Find the maximum shield count for intensity scaling.
+    final maxCount = log.values.fold<int>(0, (m, v) => v > m ? v : m);
+    final effectiveMax = maxCount > 0 ? maxCount : 1;
+
+    // Build a list of dates: we need _weeks * 7 days ending on today's week.
+    // Align to Monday-based weeks so rows = Mon…Sun.
+    final todayWeekday = today.weekday; // 1=Mon … 7=Sun
+    final endOfGrid = today;
+    final startOfGrid =
+        endOfGrid.subtract(Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)));
+
+    // Determine which months appear at the top of each column.
+    final monthHeaders = <int, String>{};
+    int? lastMonth;
+    for (int col = 0; col < _weeks; col++) {
+      final firstDayOfWeek = startOfGrid.add(Duration(days: col * 7));
+      if (firstDayOfWeek.month != lastMonth) {
+        monthHeaders[col] = S.current.monthLabels[firstDayOfWeek.month - 1];
+        lastMonth = firstDayOfWeek.month;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+          // ── Title row ─────────────────────────────────────────────
+          Row(
+            children: [
+              Icon(Icons.grid_view_rounded, color: kTextSecondary, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                S.current.shieldActivity,
+                style: TextStyle(
+                  color: kTextSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // ── Scrollable grid area ──────────────────────────────────
+          SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Month labels row ────────────────────────────────
+                SizedBox(
+                  height: 14,
+                  child: Row(
+                    children: [
+                      SizedBox(width: _dayLabelWidth),
+                      ...List.generate(_weeks, (col) {
+                        final label = monthHeaders[col];
+                        return SizedBox(
+                          width: _cellSize + _cellGap,
+                          child: label != null
+                              ? Text(
+                                  label,
+                                  style: TextStyle(
+                                    color: kTextSecondary,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.visible,
+                                  softWrap: false,
+                                )
+                              : const SizedBox.shrink(),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // ── Grid: 7 rows (Mon..Sun) × _weeks columns ───────
+                ...List.generate(7, (row) {
+                  final dayLabel = S.current.dayLabels[row];
+                  final showLabel = row == 0 || row == 2 || row == 4;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: row < 6 ? _cellGap : 0),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: _dayLabelWidth,
+                          child: showLabel
+                              ? Text(
+                                  dayLabel,
+                                  style: TextStyle(
+                                    color: kTextSecondary,
+                                    fontSize: 9,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        ...List.generate(_weeks, (col) {
+                          final date =
+                              startOfGrid.add(Duration(days: col * 7 + row));
+                          final dateStr =
+                              date.toIso8601String().substring(0, 10);
+                          final count = log[dateStr] ?? 0;
+                          final isFuture = date.isAfter(today);
+
+                          return Padding(
+                            padding: EdgeInsets.only(
+                                right: col < _weeks - 1 ? _cellGap : 0),
+                            child: Tooltip(
+                              message: isFuture
+                                  ? ''
+                                  : '${_fmtDate(date)}: ${S.current.shieldsOnDay(count)}',
+                              child: Container(
+                                width: _cellSize,
+                                height: _cellSize,
+                                decoration: BoxDecoration(
+                                  color: isFuture
+                                      ? Colors.transparent
+                                      : _cellColor(count, effectiveMax),
+                                  borderRadius: BorderRadius.circular(3),
+                                  border: isFuture
+                                      ? null
+                                      : Border.all(
+                                          color: kBorder.withValues(alpha: 0.5),
+                                          width: 0.5,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // ── Legend ─────────────────────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(S.current.less,
+                  style: TextStyle(color: kTextSecondary, fontSize: 9)),
+              const SizedBox(width: 4),
+              ...List.generate(5, (i) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: _cellColor(i, 4),
+                      borderRadius: BorderRadius.circular(2),
+                      border: Border.all(
+                        color: kBorder.withValues(alpha: 0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(width: 4),
+              Text(S.current.more,
+                  style: TextStyle(color: kTextSecondary, fontSize: 9)),
+            ],
+          ),
+        ],
+    );
+  }
+
+  /// Map a shield count to a color from transparent → kAccent.
+  Color _cellColor(int count, int max) {
+    if (count == 0) return kSurfaceHigh;
+    // 4 intensity levels.
+    final ratio = (count / max).clamp(0.0, 1.0);
+    if (ratio <= 0.25) return kAccent.withValues(alpha: 0.25);
+    if (ratio <= 0.50) return kAccent.withValues(alpha: 0.50);
+    if (ratio <= 0.75) return kAccent.withValues(alpha: 0.75);
+    return kAccent;
+  }
+
+  String _fmtDate(DateTime d) {
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 }
 
@@ -1195,10 +1550,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   late int _usageLimitMinutes;
   late int _selectedColorValue;
   late String _selectedIconLabel;
+  Timer? _debounce;
+  bool _isActivating = false;
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController(text: widget.profile.name);
     _syncFromProfile(widget.profile);
   }
 
@@ -1211,7 +1569,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   }
 
   void _syncFromProfile(BlockerProfile p) {
-    _nameController = TextEditingController(text: p.name);
+    // Reuse the existing controller — just update its text.
+    if (_nameController.text != p.name) {
+      _nameController.text = p.name;
+    }
     _scheduleEnabled = p.scheduleEnabled;
     _usageLimitEnabled = p.usageLimitEnabled;
     _taskModeEnabled = p.taskModeEnabled;
@@ -1230,6 +1591,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   String _fmt(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  void _debouncedSave() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), _save);
+  }
 
   Future<void> _save() async {
     final notifier = ref.read(profilesProvider.notifier);
@@ -1252,6 +1618,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _nameController.dispose();
     super.dispose();
   }
@@ -1328,7 +1695,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         hintText: S.current.profileNamePlaceholder,
                         hintStyle: TextStyle(color: kTextSecondary),
                       ),
-                      onChanged: (_) => _save(),
+                      onChanged: (_) => _debouncedSave(),
                     ),
                     const SizedBox(height: 8),
 
@@ -1759,12 +2126,17 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     else
                       Builder(builder: (_) {
                         final canActivate = p.hasAppsSelected &&
-                            !(_taskModeEnabled && p.tasks.isEmpty);
+                            !(_taskModeEnabled && p.tasks.isEmpty) &&
+                            !_isActivating;
                         final String buttonLabel;
                         final IconData buttonIcon;
                         final String? warningMsg;
 
-                        if (!p.hasAppsSelected) {
+                        if (_isActivating) {
+                          buttonLabel = S.current.activateShield;
+                          buttonIcon = Icons.shield_rounded;
+                          warningMsg = null;
+                        } else if (!p.hasAppsSelected) {
                           buttonLabel = S.current.selectAppsToActivate;
                           buttonIcon = Icons.apps_rounded;
                           warningMsg = S.current.noAppsWarning;
@@ -1779,17 +2151,40 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         }
 
                         return _FullWidthButton(
-                          label: buttonLabel,
+                          label: _isActivating ? '…' : buttonLabel,
                           icon: buttonIcon,
                           color: canActivate ? kTextPrimary : kTextSecondary,
                           bgColor: canActivate ? accent : kSurface,
                           borderColor: canActivate ? null : kBorder,
                           onPressed: canActivate
-                              ? () {
+                              ? () async {
                                   HapticFeedback.heavyImpact();
-                                  ref
-                                      .read(profilesProvider.notifier)
-                                      .activateProfile(p.id);
+                                  setState(() => _isActivating = true);
+                                  try {
+                                    await ref
+                                        .read(profilesProvider.notifier)
+                                        .activateProfile(p.id);
+                                  } catch (_) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            S.current.errorGeneric('Activation failed'),
+                                            style: TextStyle(color: kTextPrimary),
+                                          ),
+                                          backgroundColor: kSurface,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isActivating = false);
+                                    }
+                                  }
                                 }
                               : () {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -2240,6 +2635,10 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   String? _pinError;
   bool _obscure = true;
 
+  // Brute-force protection
+  int _failedAttempts = 0;
+  DateTime? _lockoutUntil;
+
   @override
   void initState() {
     super.initState();
@@ -2399,6 +2798,13 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   }
 
   Future<void> _verifyAndDeactivate() async {
+    // Brute-force lockout check
+    if (_lockoutUntil != null && DateTime.now().isBefore(_lockoutUntil!)) {
+      final secs = _lockoutUntil!.difference(DateTime.now()).inSeconds;
+      setState(() => _pinError = S.current.pinLockedOut(secs));
+      return;
+    }
+
     final pin = _pinController.text.trim();
     if (pin.isEmpty) {
       setState(() => _pinError = S.current.enterYourPin);
@@ -2406,10 +2812,19 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     }
     final valid = await widget.onVerifyPin(pin);
     if (valid) {
+      _failedAttempts = 0;
       if (mounted) Navigator.pop(context);
       widget.onConfirm();
     } else {
-      setState(() => _pinError = S.current.incorrectPin);
+      _failedAttempts++;
+      if (_failedAttempts >= 5) {
+        // Progressive lockout: 30s after 5, 60s after 10, etc.
+        final lockoutSecs = 30 * (_failedAttempts ~/ 5);
+        _lockoutUntil = DateTime.now().add(Duration(seconds: lockoutSecs));
+        setState(() => _pinError = S.current.pinLockedOut(lockoutSecs));
+      } else {
+        setState(() => _pinError = S.current.incorrectPin);
+      }
     }
   }
 }
@@ -2853,10 +3268,9 @@ class _WeekChart extends StatelessWidget {
   final Color accent;
   const _WeekChart({required this.history, required this.accent});
 
-  static final _dayLabels = S.current.dayLabels;
-
   @override
   Widget build(BuildContext context) {
+    final dayLabels = S.current.dayLabels;
     final maxVal = history
         .fold<int>(1, (m, d) => d.totalMinutes > m ? d.totalMinutes : m);
 
@@ -2866,7 +3280,7 @@ class _WeekChart extends StatelessWidget {
         final fraction = day.totalMinutes / maxVal;
         final isToday = day.date.day == DateTime.now().day &&
             day.date.month == DateTime.now().month;
-        final dayLabel = _dayLabels[day.date.weekday - 1];
+        final dayLabel = dayLabels[day.date.weekday - 1];
 
         return Expanded(
           child: Padding(

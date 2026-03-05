@@ -202,6 +202,17 @@ abstract class S {
   String get pinLabel;
   String get enterYourPin;
   String get incorrectPin;
+  String pinLockedOut(int seconds);
+
+  // ── Statistics section ───────────────────────────────────────────────────
+  String get statistics;
+
+  // ── Shield Activity Grid ─────────────────────────────────────────────────
+  String get shieldActivity;
+  String shieldsOnDay(int count);
+  String get less;
+  String get more;
+  List<String> get monthLabels;
 
   // ── Day labels ───────────────────────────────────────────────────────────
   List<String> get dayLabels;
@@ -333,6 +344,14 @@ class _En extends S {
   @override String get pinLabel => 'PIN';
   @override String get enterYourPin => 'Enter your PIN';
   @override String get incorrectPin => 'Incorrect PIN';
+  @override String pinLockedOut(int seconds) => 'Too many attempts. Try again in ${seconds}s';
+
+  @override String get statistics => 'Statistics';
+  @override String get shieldActivity => 'Shield Activity';
+  @override String shieldsOnDay(int count) => count == 0 ? 'No shields active' : '$count shield${count == 1 ? '' : 's'} active';
+  @override String get less => 'Less';
+  @override String get more => 'More';
+  @override List<String> get monthLabels => const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   @override List<String> get dayLabels => const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 }
@@ -463,6 +482,14 @@ class _De extends S {
   @override String get pinLabel => 'PIN';
   @override String get enterYourPin => 'PIN eingeben';
   @override String get incorrectPin => 'Falsche PIN';
+  @override String pinLockedOut(int seconds) => 'Zu viele Versuche. Erneut in ${seconds}s';
+
+  @override String get statistics => 'Statistiken';
+  @override String get shieldActivity => 'Schild-Aktivität';
+  @override String shieldsOnDay(int count) => count == 0 ? 'Keine Schilde aktiv' : '$count Schild${count == 1 ? '' : 'e'} aktiv';
+  @override String get less => 'Weniger';
+  @override String get more => 'Mehr';
+  @override List<String> get monthLabels => const ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
 
   @override List<String> get dayLabels => const ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 }
@@ -593,6 +620,14 @@ class _Es extends S {
   @override String get pinLabel => 'PIN';
   @override String get enterYourPin => 'Introduce tu PIN';
   @override String get incorrectPin => 'PIN incorrecto';
+  @override String pinLockedOut(int seconds) => 'Demasiados intentos. Inténtalo en ${seconds}s';
+
+  @override String get statistics => 'Estadísticas';
+  @override String get shieldActivity => 'Actividad de escudos';
+  @override String shieldsOnDay(int count) => count == 0 ? 'Sin escudos activos' : '$count escudo${count == 1 ? '' : 's'} activo${count == 1 ? '' : 's'}';
+  @override String get less => 'Menos';
+  @override String get more => 'Más';
+  @override List<String> get monthLabels => const ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
   @override List<String> get dayLabels => const ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 }
@@ -723,6 +758,14 @@ class _Fr extends S {
   @override String get pinLabel => 'PIN';
   @override String get enterYourPin => 'Entrez votre PIN';
   @override String get incorrectPin => 'PIN incorrect';
+  @override String pinLockedOut(int seconds) => 'Trop de tentatives. Réessayez dans ${seconds}s';
+
+  @override String get statistics => 'Statistiques';
+  @override String get shieldActivity => 'Activité des boucliers';
+  @override String shieldsOnDay(int count) => count == 0 ? 'Aucun bouclier actif' : '$count bouclier${count == 1 ? '' : 's'} actif${count == 1 ? '' : 's'}';
+  @override String get less => 'Moins';
+  @override String get more => 'Plus';
+  @override List<String> get monthLabels => const ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
   @override List<String> get dayLabels => const ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 }
@@ -853,6 +896,14 @@ class _Hr extends S {
   @override String get pinLabel => 'PIN';
   @override String get enterYourPin => 'Unesi svoj PIN';
   @override String get incorrectPin => 'Netočan PIN';
+  @override String pinLockedOut(int seconds) => 'Previše pokušaja. Pokušaj za ${seconds}s';
+
+  @override String get statistics => 'Statistika';
+  @override String get shieldActivity => 'Aktivnost štitova';
+  @override String shieldsOnDay(int count) => count == 0 ? 'Nema aktivnih štitova' : '$count štit${count == 1 ? '' : count < 5 ? 'a' : 'ova'} aktiv${count == 1 ? 'an' : 'no'}';
+  @override String get less => 'Manje';
+  @override String get more => 'Više';
+  @override List<String> get monthLabels => const ['Sij', 'Velj', 'Ožu', 'Tra', 'Svi', 'Lip', 'Srp', 'Kol', 'Ruj', 'Lis', 'Stu', 'Pro'];
 
   @override List<String> get dayLabels => const ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
 }

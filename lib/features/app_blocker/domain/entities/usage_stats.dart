@@ -46,7 +46,9 @@ class ProfileUsageStats {
 // ── Mock data generator ────────────────────────────────────────────────────
 
 class MockUsageGenerator {
-  static final _rng = Random(42);
+  // Per-call RNG seeded from profile ID for stable-per-profile but
+  // non-flickering results across rebuilds.
+  static Random _rngFor(String profileId) => Random(profileId.hashCode);
 
   static const _mockApps = [
     ('Instagram', 'com.instagram.ios'),
@@ -68,9 +70,10 @@ class MockUsageGenerator {
     required bool isActive,
     String? shieldActivatedAt,
   }) {
+    final rng = _rngFor(profileId);
     final count = appCount.clamp(1, _mockApps.length);
     final selectedApps = List.of(_mockApps)
-      ..shuffle(_rng)
+      ..shuffle(rng)
       ..length = count;
 
     // If shield is active, reduce today's usage proportionally to how long
@@ -87,8 +90,8 @@ class MockUsageGenerator {
     }
 
     final appUsages = selectedApps.map((app) {
-      final weekAvg = 15 + _rng.nextInt(60); // 15-75 min avg
-      final today = ((10 + _rng.nextInt(80)) * reductionFactor).round();
+      final weekAvg = 15 + rng.nextInt(60); // 15-75 min avg
+      final today = ((10 + rng.nextInt(80)) * reductionFactor).round();
       return AppUsage(
         appName: app.$1,
         bundleId: app.$2,
@@ -108,7 +111,7 @@ class MockUsageGenerator {
     final weekHistory = List.generate(7, (i) {
       final date = now.subtract(Duration(days: 6 - i));
       final base = weekAvgTotal;
-      final variance = _rng.nextInt((base * 0.4).round()) - (base * 0.2).round();
+      final variance = rng.nextInt((base * 0.4).round()) - (base * 0.2).round();
       final mins = i == 6
           ? todayTotal // today = actual today
           : (base + variance).clamp(0, base * 2);

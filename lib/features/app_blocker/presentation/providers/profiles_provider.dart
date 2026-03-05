@@ -3,10 +3,12 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/screen_time_datasource.dart';
 import '../../data/datasources/mock_screen_time_datasource.dart';
 import '../../domain/entities/blocker_profile.dart';
+import 'shield_activity_provider.dart';
 
 // ── Feature flag ───────────────────────────────────────────────────────────
 /// Set to `false` once your Apple Developer license is active
@@ -137,25 +139,35 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     final profile = _profiles.firstWhere((p) => p.id == id);
     if (!profile.hasAppsSelected) return;
 
-    // Apply all enabled rules — they stack.
-    // 1) Always apply the immediate shield (manual base).
-    await _ds.applyShield();
+    try {
+      // Apply all enabled rules — they stack.
+      // 1) Always apply the immediate shield (manual base).
+      await _ds.applyShield();
 
-    // 2) Schedule: hard-block during a time window.
-    if (profile.scheduleEnabled &&
-        profile.scheduleStartHour != null &&
-        profile.scheduleEndHour != null) {
-      await _ds.startSchedule(
-        startHour: profile.scheduleStartHour!,
-        startMinute: profile.scheduleStartMinute ?? 0,
-        endHour: profile.scheduleEndHour!,
-        endMinute: profile.scheduleEndMinute ?? 0,
-      );
-    }
+      // 2) Schedule: hard-block during a time window.
+      if (profile.scheduleEnabled &&
+          profile.scheduleStartHour != null &&
+          profile.scheduleEndHour != null) {
+        await _ds.startSchedule(
+          startHour: profile.scheduleStartHour!,
+          startMinute: profile.scheduleStartMinute ?? 0,
+          endHour: profile.scheduleEndHour!,
+          endMinute: profile.scheduleEndMinute ?? 0,
+        );
+      }
 
-    // 3) Usage limit: soft-block after daily budget.
-    if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
-      await _ds.startUsageLimit(minutes: profile.usageLimitMinutes!);
+      // 3) Usage limit: soft-block after daily budget.
+      if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
+        await _ds.startUsageLimit(minutes: profile.usageLimitMinutes!);
+      }
+    } catch (e) {
+      // Roll back – attempt to remove any partially-applied shield.
+      try {
+        await _ds.removeShield();
+        await _ds.stopMonitoring();
+      } catch (_) {}
+      // Re-throw so the UI can react (e.g. show a snackbar).
+      rethrow;
     }
 
     // 4) Task mode: reset tasks to undone so the user must complete them.
@@ -180,6 +192,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }).toList();
     state = AsyncData(list);
     await _persist(list);
+    // Record daily shield activity.
+    _recordActivity(list);
   }
 
   Future<void> deactivateProfile(String id) async {
@@ -202,6 +216,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }).toList();
     state = AsyncData(list);
     await _persist(list);
+    // Record daily shield activity.
+    _recordActivity(list);
   }
 
   /// Quick toggle from the dashboard.
@@ -212,6 +228,13 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     } else {
       await activateProfile(id);
     }
+  }
+
+  // ── Shield activity recording ──────────────────────────────────────
+
+  void _recordActivity(List<BlockerProfile> profiles) {
+    final activeCount = profiles.where((p) => p.isActive).length;
+    ref.read(shieldActivityProvider.notifier).record(activeCount);
   }
 
   // ── Task management ────────────────────────────────────────────────
@@ -274,31 +297,53 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     await _persist(list);
   }
 
-  // ── PIN management ─────────────────────────────────────────────────────
+  // ── PIN management (Keychain via flutter_secure_storage) ────────────────
+
+  static const _secureStorage = FlutterSecureStorage(
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
+  /// Migrate PIN from SharedPreferences → Keychain (one-time).
+  Future<void> _migratePinToKeychain() async {
+    final prefs = await SharedPreferences.getInstance();
+    final legacySalt = prefs.getString(_kPinSaltKey);
+    final legacyHash = prefs.getString(_kPinHashKey);
+    if (legacySalt != null && legacyHash != null) {
+      // Already stored in insecure prefs — move to Keychain.
+      final keychainHash = await _secureStorage.read(key: _kPinHashKey);
+      if (keychainHash == null) {
+        await _secureStorage.write(key: _kPinSaltKey, value: legacySalt);
+        await _secureStorage.write(key: _kPinHashKey, value: legacyHash);
+      }
+      // Remove insecure copies.
+      await prefs.remove(_kPinSaltKey);
+      await prefs.remove(_kPinHashKey);
+    }
+  }
 
   Future<bool> savePin(String pin) async {
-    final prefs = await SharedPreferences.getInstance();
     final salt = List.generate(16, (_) => Random.secure().nextInt(256))
         .map((b) => b.toRadixString(16).padLeft(2, '0'))
         .join();
     final hash = sha256.convert(utf8.encode('$salt:$pin')).toString();
-    await prefs.setString(_kPinSaltKey, salt);
-    await prefs.setString(_kPinHashKey, hash);
+    await _secureStorage.write(key: _kPinSaltKey, value: salt);
+    await _secureStorage.write(key: _kPinHashKey, value: hash);
     return true;
   }
 
   Future<bool> verifyPin(String pin) async {
-    final prefs = await SharedPreferences.getInstance();
-    final salt = prefs.getString(_kPinSaltKey);
-    final storedHash = prefs.getString(_kPinHashKey);
+    await _migratePinToKeychain();
+    final salt = await _secureStorage.read(key: _kPinSaltKey);
+    final storedHash = await _secureStorage.read(key: _kPinHashKey);
     if (salt == null || storedHash == null) return false;
     final hash = sha256.convert(utf8.encode('$salt:$pin')).toString();
     return hash == storedHash;
   }
 
   Future<bool> hasPinSet() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_kPinHashKey);
+    await _migratePinToKeychain();
+    final hash = await _secureStorage.read(key: _kPinHashKey);
+    return hash != null;
   }
 
   // ── Persistence helpers ────────────────────────────────────────────────

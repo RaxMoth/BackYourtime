@@ -15,13 +15,17 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString(_key);
-    if (value != null) {
-      state = ThemeMode.values.firstWhere(
-        (m) => m.name == value,
-        orElse: () => ThemeMode.system,
-      );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final value = prefs.getString(_key);
+      if (value != null) {
+        state = ThemeMode.values.firstWhere(
+          (m) => m.name == value,
+          orElse: () => ThemeMode.system,
+        );
+      }
+    } catch (_) {
+      // Fall back to system theme on read failure.
     }
   }
 

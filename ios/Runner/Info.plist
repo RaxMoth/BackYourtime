@@ -67,6 +67,6 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSFamilyControlsUsageDescription</key>
-	<string>FocusLock needs this to block selected apps.</string>
+	<string>Unspend needs this permission to block the apps you select.</string>
 </dict>
 </plist>
