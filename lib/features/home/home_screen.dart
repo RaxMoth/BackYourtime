@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../shared/components/base_layout.dart';
-import '../../shared/components/app_footer.dart';
+import 'package:flutterbase/shared/components/base_layout.dart';
+import 'package:flutterbase/shared/components/app_footer.dart';
 
 /// Home Screen - Example implementation
 class HomeScreen extends StatefulWidget {

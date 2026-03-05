@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/strings.dart';
+import 'package:flutterbase/core/constants/strings.dart';
 
 // ── Task entity ────────────────────────────────────────────────────────────
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'config/router.dart';
-import 'config/service_locator.dart';
-import 'core/constants/strings.dart';
-import 'core/theme/app_theme.dart';
-import 'shared/providers/locale_provider.dart';
+import 'package:flutterbase/config/router.dart';
+import 'package:flutterbase/config/service_locator.dart';
+import 'package:flutterbase/core/constants/strings.dart';
+import 'package:flutterbase/core/theme/app_theme.dart';
+import 'package:flutterbase/shared/providers/locale_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

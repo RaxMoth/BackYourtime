@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import '../../core/constants/app_constants.dart';
+import 'package:flutterbase/core/constants/app_constants.dart';
 import 'logger_service.dart';
 
 /// API Service using Dio

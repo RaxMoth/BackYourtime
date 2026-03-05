@@ -4,16 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_blocker_provider.dart';
 import '../../domain/entities/blocker_config.dart';
-
-// ── Design tokens ──────────────────────────────────────────────────────────
-const _kBg = Color(0xFF0D0D0D);
-const _kSurface = Color(0xFF1A1A1A);
-const _kBorder = Color(0xFF2A2A2A);
-const _kAccent = Color(0xFFE53935);
-const _kAccentDark = Color(0xFF8B1A1A);
-const _kTextPrimary = Color(0xFFFFFFFF);
-const _kTextSecondary = Color(0xFF9E9E9E);
-const _kRadius = 16.0;
+import 'package:flutterbase/core/theme/design_tokens.dart';
 
 // ── Screen ─────────────────────────────────────────────────────────────────
 class AppBlockerScreen extends ConsumerStatefulWidget {
@@ -44,14 +35,14 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
     final blockerState = ref.watch(appBlockerProvider);
 
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: kBg,
       body: SafeArea(
         child: blockerState.when(
           loading: () => const Center(
-            child: CircularProgressIndicator(color: _kAccent),
+            child: CircularProgressIndicator(color: kAccent),
           ),
           error: (e, _) => Center(
-            child: Text('Error: $e', style: const TextStyle(color: _kAccent)),
+            child: Text('Error: $e', style: const TextStyle(color: kAccent)),
           ),
           data: (config) => _buildBody(context, config),
         ),
@@ -68,12 +59,12 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
           // ── Header ───────────────────────────────────────────────────
           Row(
             children: [
-              Icon(Icons.shield_outlined, color: _kAccent, size: 28),
+              Icon(Icons.shield_outlined, color: kAccent, size: 28),
               const SizedBox(width: 10),
               const Text(
                 'Unspend',
                 style: TextStyle(
-                  color: _kTextPrimary,
+                  color: kTextPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -89,7 +80,7 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
           // ── Select Apps ──────────────────────────────────────────────
           _SectionCard(
             child: InkWell(
-              borderRadius: BorderRadius.circular(_kRadius),
+              borderRadius: BorderRadius.circular(kRadius),
               onTap: () async {
                 await ref.read(appBlockerProvider.notifier).showAppPicker();
                 if (mounted) await _showPinSetupDialog(context);
@@ -102,17 +93,17 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: _kBorder,
+                        color: kBorder,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.apps_rounded,
-                          color: _kTextSecondary, size: 22),
+                          color: kTextSecondary, size: 22),
                     ),
                     const SizedBox(width: 14),
                     const Text(
                       'Select Apps to Block',
                       style: TextStyle(
-                        color: _kTextPrimary,
+                        color: kTextPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -123,13 +114,13 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _kBorder,
+                          color: kBorder,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           '5 apps selected',
                           style: TextStyle(
-                            color: _kTextSecondary,
+                            color: kTextSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -151,12 +142,12 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                   Row(
                     children: [
                       Icon(Icons.access_time_rounded,
-                          color: _kTextSecondary, size: 20),
+                          color: kTextSecondary, size: 20),
                       const SizedBox(width: 8),
                       const Text(
                         'Block on Schedule',
                         style: TextStyle(
-                          color: _kTextPrimary,
+                          color: kTextPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -168,11 +159,11 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                     children: [
                       const Text('Start',
                           style: TextStyle(
-                              color: _kTextSecondary, fontSize: 13)),
+                              color: kTextSecondary, fontSize: 13)),
                       const SizedBox(width: 80),
                       const Text('End',
                           style: TextStyle(
-                              color: _kTextSecondary, fontSize: 13)),
+                              color: kTextSecondary, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -188,8 +179,8 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                               builder: (ctx, child) => Theme(
                                 data: ThemeData.dark().copyWith(
                                   colorScheme: const ColorScheme.dark(
-                                    primary: _kAccent,
-                                    surface: _kSurface,
+                                    primary: kAccent,
+                                    surface: kSurface,
                                   ),
                                 ),
                                 child: child!,
@@ -211,8 +202,8 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                               builder: (ctx, child) => Theme(
                                 data: ThemeData.dark().copyWith(
                                   colorScheme: const ColorScheme.dark(
-                                    primary: _kAccent,
-                                    surface: _kSurface,
+                                    primary: kAccent,
+                                    surface: kSurface,
                                   ),
                                 ),
                                 child: child!,
@@ -254,12 +245,12 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                   Row(
                     children: [
                       Icon(Icons.timer_outlined,
-                          color: _kTextSecondary, size: 20),
+                          color: kTextSecondary, size: 20),
                       const SizedBox(width: 8),
                       const Text(
                         'Block After Limit',
                         style: TextStyle(
-                          color: _kTextPrimary,
+                          color: kTextPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -269,13 +260,13 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _kBorder,
+                          color: kBorder,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${_usageLimitMinutes}m',
                           style: const TextStyle(
-                            color: _kTextPrimary,
+                            color: kTextPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -286,10 +277,10 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                   const SizedBox(height: 12),
                   SliderTheme(
                     data: SliderThemeData(
-                      activeTrackColor: _kAccent,
-                      inactiveTrackColor: _kBorder,
-                      thumbColor: _kTextPrimary,
-                      overlayColor: _kAccent.withValues(alpha: 0.15),
+                      activeTrackColor: kAccent,
+                      inactiveTrackColor: kBorder,
+                      thumbColor: kTextPrimary,
+                      overlayColor: kAccent.withValues(alpha: 0.15),
                       trackHeight: 4,
                       thumbShape:
                           const RoundSliderThumbShape(enabledThumbRadius: 8),
@@ -310,10 +301,10 @@ class _AppBlockerScreenState extends ConsumerState<AppBlockerScreen> {
                       children: const [
                         Text('5 min',
                             style: TextStyle(
-                                color: _kTextSecondary, fontSize: 11)),
+                                color: kTextSecondary, fontSize: 11)),
                         Text('120 min',
                             style: TextStyle(
-                                color: _kTextSecondary, fontSize: 11)),
+                                color: kTextSecondary, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -405,7 +396,7 @@ class _ShieldStatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(_kRadius),
+        borderRadius: BorderRadius.circular(kRadius),
         gradient: isActive
             ? const LinearGradient(
                 colors: [Color(0xFF2B0D0D), Color(0xFF1A0808)],
@@ -413,9 +404,9 @@ class _ShieldStatusCard extends StatelessWidget {
                 end: Alignment.bottomRight,
               )
             : null,
-        color: isActive ? null : _kSurface,
+        color: isActive ? null : kSurface,
         border: Border.all(
-          color: isActive ? _kAccent.withValues(alpha: 0.4) : _kBorder,
+          color: isActive ? kAccent.withValues(alpha: 0.4) : kBorder,
           width: 1,
         ),
       ),
@@ -426,14 +417,14 @@ class _ShieldStatusCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isActive
-                  ? _kAccentDark.withValues(alpha: 0.6)
-                  : _kBorder,
+                  ? kAccentDark.withValues(alpha: 0.6)
+                  : kBorder,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.shield_rounded,
               size: 28,
-              color: isActive ? _kAccent : _kTextSecondary,
+              color: isActive ? kAccent : kTextSecondary,
             ),
           ),
           const SizedBox(width: 16),
@@ -444,7 +435,7 @@ class _ShieldStatusCard extends StatelessWidget {
                 Text(
                   isActive ? 'Shield Active' : 'Shield Inactive',
                   style: const TextStyle(
-                    color: _kTextPrimary,
+                    color: kTextPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -455,7 +446,7 @@ class _ShieldStatusCard extends StatelessWidget {
                       ? 'Blocking distracting apps'
                       : 'No apps are being blocked',
                   style: const TextStyle(
-                    color: _kTextSecondary,
+                    color: kTextSecondary,
                     fontSize: 13,
                   ),
                 ),
@@ -467,11 +458,11 @@ class _ShieldStatusCard extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: _kAccent,
+                color: kAccent,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: _kAccent.withValues(alpha: 0.6),
+                    color: kAccent.withValues(alpha: 0.6),
                     blurRadius: 8,
                     spreadRadius: 2,
                   ),
@@ -493,9 +484,9 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _kSurface,
-        borderRadius: BorderRadius.circular(_kRadius),
-        border: Border.all(color: _kBorder, width: 1),
+        color: kSurface,
+        borderRadius: BorderRadius.circular(kRadius),
+        border: Border.all(color: kBorder, width: 1),
       ),
       child: child,
     );
@@ -520,9 +511,9 @@ class _TimePickerTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: _kBg,
+          color: kBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _kBorder),
+          border: Border.all(color: kBorder),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -530,12 +521,12 @@ class _TimePickerTile extends StatelessWidget {
             Text(
               formatted,
               style: const TextStyle(
-                color: _kTextPrimary,
+                color: kTextPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const Icon(Icons.access_time, color: _kTextSecondary, size: 20),
+            const Icon(Icons.access_time, color: kTextSecondary, size: 20),
           ],
         ),
       ),
@@ -557,8 +548,8 @@ class _ActionButton extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor: enabled ? _kBorder : _kBorder.withValues(alpha: 0.4),
-          foregroundColor: enabled ? _kTextPrimary : _kTextSecondary,
+          backgroundColor: enabled ? kBorder : kBorder.withValues(alpha: 0.4),
+          foregroundColor: enabled ? kTextPrimary : kTextSecondary,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -588,8 +579,8 @@ class _PrimaryButton extends StatelessWidget {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        backgroundColor: enabled ? _kAccent : _kAccent.withValues(alpha: 0.3),
-        foregroundColor: _kTextPrimary,
+        backgroundColor: enabled ? kAccent : kAccent.withValues(alpha: 0.3),
+        foregroundColor: kTextPrimary,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -598,14 +589,14 @@ class _PrimaryButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: enabled ? _kTextPrimary : _kTextSecondary),
+          Icon(icon, size: 18, color: enabled ? kTextPrimary : kTextSecondary),
           const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: enabled ? _kTextPrimary : _kTextSecondary,
+              color: enabled ? kTextPrimary : kTextSecondary,
             ),
           ),
         ],
@@ -631,27 +622,27 @@ class _SecondaryButton extends StatelessWidget {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        backgroundColor: _kSurface,
-        foregroundColor: enabled ? _kTextPrimary : _kTextSecondary,
+        backgroundColor: kSurface,
+        foregroundColor: enabled ? kTextPrimary : kTextSecondary,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(
-            color: enabled ? _kBorder : _kBorder.withValues(alpha: 0.4),
+            color: enabled ? kBorder : kBorder.withValues(alpha: 0.4),
           ),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: enabled ? _kTextSecondary : _kBorder),
+          Icon(icon, size: 18, color: enabled ? kTextSecondary : kBorder),
           const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: enabled ? _kTextSecondary : _kBorder,
+              color: enabled ? kTextSecondary : kBorder,
             ),
           ),
         ],
@@ -686,20 +677,20 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _kSurface,
+      backgroundColor: kSurface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(_kRadius),
-        side: const BorderSide(color: _kBorder),
+        borderRadius: BorderRadius.circular(kRadius),
+        side: const BorderSide(color: kBorder),
       ),
       title: const Text('Set Deactivation PIN',
-          style: TextStyle(color: _kTextPrimary, fontSize: 18)),
+          style: TextStyle(color: kTextPrimary, fontSize: 18)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Hand your phone to a trusted person.\nThey set a PIN that is required to deactivate the shield.',
-            style: TextStyle(color: _kTextSecondary, fontSize: 13),
+            style: TextStyle(color: kTextSecondary, fontSize: 13),
           ),
           const SizedBox(height: 20),
           _buildPinField(
@@ -717,7 +708,7 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: _kAccent, fontSize: 12)),
+            Text(_error!, style: const TextStyle(color: kAccent, fontSize: 12)),
           ],
         ],
       ),
@@ -738,7 +729,7 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
             if (mounted) Navigator.pop(context);
           },
           child: const Text('Save PIN',
-              style: TextStyle(color: _kAccent, fontWeight: FontWeight.w600)),
+              style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -754,28 +745,28 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
       controller: controller,
       obscureText: obscure,
       keyboardType: TextInputType.visiblePassword,
-      style: const TextStyle(color: _kTextPrimary, fontSize: 16),
+      style: const TextStyle(color: kTextPrimary, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: _kTextSecondary, fontSize: 13),
+        labelStyle: const TextStyle(color: kTextSecondary, fontSize: 13),
         filled: true,
-        fillColor: _kBg,
+        fillColor: kBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _kBorder),
+          borderSide: const BorderSide(color: kBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _kBorder),
+          borderSide: const BorderSide(color: kBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _kAccent),
+          borderSide: const BorderSide(color: kAccent),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,
-            color: _kTextSecondary,
+            color: kTextSecondary,
             size: 20,
           ),
           onPressed: onToggle,
@@ -842,16 +833,16 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _kSurface,
+      backgroundColor: kSurface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(_kRadius),
-        side: const BorderSide(color: _kBorder),
+        borderRadius: BorderRadius.circular(kRadius),
+        side: const BorderSide(color: kBorder),
       ),
       title: Text(
         _step == _DeactivateStep.waiting
             ? 'Cooling Down…'
             : 'Enter PIN to Deactivate',
-        style: const TextStyle(color: _kTextPrimary, fontSize: 18),
+        style: const TextStyle(color: kTextPrimary, fontSize: 18),
       ),
       content: _step == _DeactivateStep.waiting
           ? _buildWaitingContent()
@@ -859,14 +850,14 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: _kTextSecondary)),
+          child: const Text('Cancel', style: TextStyle(color: kTextSecondary)),
         ),
         if (_step == _DeactivateStep.enterPin)
           TextButton(
             onPressed: _verifyAndDeactivate,
             child: const Text('Deactivate',
                 style:
-                    TextStyle(color: _kAccent, fontWeight: FontWeight.w600)),
+                    TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
           ),
       ],
     );
@@ -878,14 +869,14 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       children: [
         const Text(
           'Take a moment to reconsider.\nThe shield will be deactivatable after the timer.',
-          style: TextStyle(color: _kTextSecondary, fontSize: 13),
+          style: TextStyle(color: kTextSecondary, fontSize: 13),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
         Text(
           _formattedTime,
           style: const TextStyle(
-            color: _kAccent,
+            color: kAccent,
             fontSize: 48,
             fontWeight: FontWeight.bold,
             fontFeatures: [FontFeature.tabularFigures()],
@@ -898,8 +889,8 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: 1 - (_secondsRemaining / _waitSeconds),
-              backgroundColor: _kBorder,
-              valueColor: const AlwaysStoppedAnimation<Color>(_kAccent),
+              backgroundColor: kBorder,
+              valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
               minHeight: 4,
             ),
           ),
@@ -914,37 +905,37 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       children: [
         const Text(
           'Enter the PIN set by your trusted person.',
-          style: TextStyle(color: _kTextSecondary, fontSize: 13),
+          style: TextStyle(color: kTextSecondary, fontSize: 13),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _pinController,
           obscureText: _obscure,
           keyboardType: TextInputType.visiblePassword,
-          style: const TextStyle(color: _kTextPrimary, fontSize: 16),
+          style: const TextStyle(color: kTextPrimary, fontSize: 16),
           decoration: InputDecoration(
             labelText: 'PIN',
-            labelStyle: const TextStyle(color: _kTextSecondary, fontSize: 13),
+            labelStyle: const TextStyle(color: kTextSecondary, fontSize: 13),
             filled: true,
-            fillColor: _kBg,
+            fillColor: kBg,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kBorder),
+              borderSide: const BorderSide(color: kBorder),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kBorder),
+              borderSide: const BorderSide(color: kBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _kAccent),
+              borderSide: const BorderSide(color: kAccent),
             ),
             errorText: _pinError,
-            errorStyle: const TextStyle(color: _kAccent),
+            errorStyle: const TextStyle(color: kAccent),
             suffixIcon: IconButton(
               icon: Icon(
                 _obscure ? Icons.visibility_off : Icons.visibility,
-                color: _kTextSecondary,
+                color: kTextSecondary,
                 size: 20,
               ),
               onPressed: () => setState(() => _obscure = !_obscure),

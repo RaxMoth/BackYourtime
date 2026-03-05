@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:flutterbase/core/theme/app_colors.dart';
 
 /// Loading Indicator Widget
 class AppLoadingIndicator extends StatelessWidget {

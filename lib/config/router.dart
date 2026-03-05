@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../features/app_blocker/presentation/pages/dashboard_screen.dart';
+import 'package:flutterbase/features/app_blocker/presentation/pages/dashboard_screen.dart';
 
 /// App Router Configuration
 final goRouter = GoRouter(
