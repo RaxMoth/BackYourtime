@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/screen_time_datasource.dart';
@@ -13,9 +14,15 @@ import '../../domain/entities/blocker_profile.dart';
 const kUseMockScreenTime = true;
 
 // ── Persistence keys ───────────────────────────────────────────────────────
-const _kProfilesKey = 'blocker_profiles_v2';
+const _kProfilesKey = 'blocker_profiles_v3';
+const _kSchemaVersionKey = 'blocker_schema_version';
+const _kCurrentSchemaVersion = 3;
 const _kPinHashKey = 'blocker_pin_hash';
 const _kPinSaltKey = 'blocker_pin_salt';
+
+// Legacy keys for migration
+const _kLegacyProfilesV2 = 'blocker_profiles_v2';
+const _kLegacyProfilesV1 = 'blocker_profiles';
 
 // ── Providers ──────────────────────────────────────────────────────────────
 
@@ -39,8 +46,26 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   @override
   Future<List<BlockerProfile>> build() async {
     _ds = ref.read(screenTimeDatasourceProvider);
-    await _ds.requestAuthorization();
-    return _loadProfiles();
+    try {
+      await _ds.requestAuthorization();
+    } catch (_) {
+      // Permission not yet granted – continue with saved profiles anyway.
+    }
+    final profiles = await _loadProfiles();
+    // Recover from app crash / reboot: mark any "active" profile that has
+    // no valid shieldActivatedAt as inactive so the UI stays consistent.
+    bool needsPersist = false;
+    final recovered = profiles.map((p) {
+      if (p.isActive && p.shieldActivatedAt == null) {
+        needsPersist = true;
+        return p.copyWith(isActive: false);
+      }
+      return p;
+    }).toList();
+    if (needsPersist) {
+      await _persist(recovered);
+    }
+    return recovered;
   }
 
   // ── CRUD ───────────────────────────────────────────────────────────────
@@ -52,11 +77,11 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       id: id,
       name: name,
       colorValue: ProfileColor.palette[
-              state.requireValue.length % ProfileColor.palette.length]
+              _profiles.length % ProfileColor.palette.length]
           .color
           .toARGB32(),
     );
-    final updated = [...state.requireValue, profile];
+    final updated = [..._profiles, profile];
     state = AsyncData(updated);
     await _persist(updated);
     return id;
@@ -65,7 +90,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   /// Update any field of a profile by [id].
   /// Silently ignores setting changes if the profile is active.
   Future<void> updateProfile(BlockerProfile profile) async {
-    final current = state.requireValue.firstWhere((p) => p.id == profile.id);
+    final current = _profiles.firstWhere((p) => p.id == profile.id);
     // If the profile is active, only allow name and cosmetic changes.
     // Block rule changes are locked while shield is on.
     final effective = current.isActive
@@ -75,7 +100,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
             iconLabel: profile.iconLabel,
           )
         : profile;
-    final list = state.requireValue
+    final list = _profiles
         .map((p) => p.id == effective.id ? effective : p)
         .toList();
     state = AsyncData(list);
@@ -84,12 +109,12 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   /// Delete a profile. Removes its shield if active.
   Future<void> deleteProfile(String id) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == id);
+    final profile = _profiles.firstWhere((p) => p.id == id);
     if (profile.isActive) {
       await _ds.removeShield();
       await _ds.stopMonitoring();
     }
-    final list = state.requireValue.where((p) => p.id != id).toList();
+    final list = _profiles.where((p) => p.id != id).toList();
     state = AsyncData(list);
     await _persist(list);
   }
@@ -98,7 +123,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   Future<void> pickAppsForProfile(String id) async {
     await _ds.showAppPicker();
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != id) return p;
       // Mock: random app count between 3-12
       final count = kUseMockScreenTime ? (Random().nextInt(10) + 3) : p.appCount;
@@ -109,7 +134,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   }
 
   Future<void> activateProfile(String id) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == id);
+    final profile = _profiles.firstWhere((p) => p.id == id);
     if (!profile.hasAppsSelected) return;
 
     // Apply all enabled rules — they stack.
@@ -146,7 +171,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       activatedProfile = profile.copyWith(tasksLastResetDate: todayStr);
     }
 
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != id) return p;
       return activatedProfile.copyWith(
         isActive: true,
@@ -160,7 +185,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   Future<void> deactivateProfile(String id) async {
     await _ds.removeShield();
     await _ds.stopMonitoring();
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != id) return p;
       // Accumulate saved minutes from this session.
       int sessionMinutes = 0;
@@ -181,7 +206,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   /// Quick toggle from the dashboard.
   Future<void> toggleProfile(String id) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == id);
+    final profile = _profiles.firstWhere((p) => p.id == id);
     if (profile.isActive) {
       await deactivateProfile(id);
     } else {
@@ -193,10 +218,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   /// Add a new task to a profile. Ignored when the profile is active.
   Future<void> addTask(String profileId, String title) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    final profile = _profiles.firstWhere((p) => p.id == profileId);
     if (profile.isActive) return;
     final taskId = DateTime.now().microsecondsSinceEpoch.toString();
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != profileId) return p;
       return p.copyWith(
         tasks: [...p.tasks, BlockerTask(id: taskId, title: title)],
@@ -208,9 +233,9 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   /// Remove a task from a profile. Ignored when the profile is active.
   Future<void> removeTask(String profileId, String taskId) async {
-    final profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    final profile = _profiles.firstWhere((p) => p.id == profileId);
     if (profile.isActive) return;
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != profileId) return p;
       return p.copyWith(
         tasks: p.tasks.where((t) => t.id != taskId).toList(),
@@ -224,7 +249,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   ///
   /// Daily reset: if the day changed since last reset, reset all tasks first.
   Future<void> toggleTask(String profileId, String taskId) async {
-    var profile = state.requireValue.firstWhere((p) => p.id == profileId);
+    var profile = _profiles.firstWhere((p) => p.id == profileId);
 
     // Daily reset check.
     final todayStr = DateTime.now().toIso8601String().substring(0, 10);
@@ -241,7 +266,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
         .toList();
     final updatedProfile = profile.copyWith(tasks: updatedTasks);
 
-    final list = state.requireValue.map((p) {
+    final list = _profiles.map((p) {
       if (p.id != profileId) return p;
       return updatedProfile;
     }).toList();
@@ -278,23 +303,69 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   // ── Persistence helpers ────────────────────────────────────────────────
 
+  /// Safely access the current profile list. Returns empty list if loading
+  /// or in an error state (avoids [StateError] from `requireValue`).
+  List<BlockerProfile> get _profiles => state.valueOrNull ?? [];
+
   Future<List<BlockerProfile>> _loadProfiles() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kProfilesKey);
-    if (raw == null) return [];
     try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // ── Migration: move data from older keys to current key ──────────
+      await _migrateIfNeeded(prefs);
+
+      final raw = prefs.getString(_kProfilesKey);
+      if (raw == null) return [];
       final list = (json.decode(raw) as List)
           .map((e) => BlockerProfile.fromJson(e as Map<String, dynamic>))
           .toList();
       return list;
-    } catch (_) {
+    } catch (e) {
+      // Corrupt data – start fresh rather than crash.
+      debugPrint('[ProfilesNotifier] Failed to load profiles: $e');
       return [];
     }
   }
 
+  /// Migrates profile data from legacy storage keys to the current version.
+  Future<void> _migrateIfNeeded(SharedPreferences prefs) async {
+    final version = prefs.getInt(_kSchemaVersionKey) ?? 0;
+    if (version >= _kCurrentSchemaVersion) return;
+
+    // v0/v1 → v3: read from legacy key and write to new key.
+    if (version < 3) {
+      final legacy = prefs.getString(_kProfilesKey) ??
+          prefs.getString(_kLegacyProfilesV2) ??
+          prefs.getString(_kLegacyProfilesV1);
+      if (legacy != null) {
+        // Re-parse through fromJson which fills in defaults for new fields.
+        try {
+          final list = (json.decode(legacy) as List)
+              .map((e) => BlockerProfile.fromJson(e as Map<String, dynamic>))
+              .toList();
+          final encoded =
+              json.encode(list.map((p) => p.toJson()).toList());
+          await prefs.setString(_kProfilesKey, encoded);
+        } catch (e) {
+          debugPrint('[ProfilesNotifier] Migration parse failed: $e');
+        }
+        // Clean up legacy keys.
+        await prefs.remove(_kLegacyProfilesV1);
+        await prefs.remove(_kLegacyProfilesV2);
+      }
+    }
+
+    await prefs.setInt(_kSchemaVersionKey, _kCurrentSchemaVersion);
+    debugPrint('[ProfilesNotifier] Migrated to schema v$_kCurrentSchemaVersion');
+  }
+
   Future<void> _persist(List<BlockerProfile> profiles) async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = json.encode(profiles.map((p) => p.toJson()).toList());
-    await prefs.setString(_kProfilesKey, encoded);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = json.encode(profiles.map((p) => p.toJson()).toList());
+      await prefs.setString(_kProfilesKey, encoded);
+    } catch (e) {
+      debugPrint('[ProfilesNotifier] Failed to persist profiles: $e');
+    }
   }
 }

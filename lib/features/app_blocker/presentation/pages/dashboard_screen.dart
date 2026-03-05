@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/profiles_provider.dart';
 import '../../domain/entities/blocker_profile.dart';
@@ -121,6 +122,7 @@ class DashboardScreen extends ConsumerWidget {
               onPressed: () async {
                 final name = controller.text.trim();
                 if (name.isEmpty) return;
+                HapticFeedback.lightImpact();
                 final id = await ref
                     .read(profilesProvider.notifier)
                     .createProfile(name: name);
@@ -307,6 +309,7 @@ class _DashboardBody extends ConsumerWidget {
                   ));
                 },
                 onToggle: () async {
+                  HapticFeedback.mediumImpact();
                   final notifier = ref.read(profilesProvider.notifier);
                   if (profile.isActive) {
                     // Deactivation requires PIN + timer
@@ -405,9 +408,7 @@ class _DashboardBody extends ConsumerWidget {
                 title: Text(S.current.languageLabel,
                     style: TextStyle(color: kTextPrimary)),
                 subtitle: Text(
-                    S.isGerman
-                        ? S.current.languageGerman
-                        : S.current.languageEnglish,
+                    _currentLanguageName(),
                     style: TextStyle(color: kTextSecondary, fontSize: 12)),
                 trailing:
                     const Icon(Icons.chevron_right_rounded, color: kTextSecondary),
@@ -468,21 +469,35 @@ class _DashboardBody extends ConsumerWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              _languageOption(ctx, ref,
-                  code: 'en',
-                  label: 'English',
-                  selected: currentCode == 'en'),
-              const SizedBox(height: 8),
-              _languageOption(ctx, ref,
-                  code: 'de',
-                  label: 'Deutsch',
-                  selected: currentCode == 'de'),
+              ..._languageEntries.map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _languageOption(ctx, ref,
+                        code: e.code,
+                        label: e.nativeName,
+                        selected: currentCode == e.code),
+                  )),
             ],
           ),
         ),
       ),
     );
   }
+
+  static String _currentLanguageName() => switch (S.langCode) {
+        'de' => 'Deutsch',
+        'es' => 'Español',
+        'fr' => 'Français',
+        'hr' => 'Hrvatski',
+        _ => 'English',
+      };
+
+  static final _languageEntries = [
+    (code: 'en', nativeName: 'English'),
+    (code: 'de', nativeName: 'Deutsch'),
+    (code: 'es', nativeName: 'Español'),
+    (code: 'fr', nativeName: 'Français'),
+    (code: 'hr', nativeName: 'Hrvatski'),
+  ];
 
   Widget _languageOption(
     BuildContext ctx,
@@ -772,7 +787,9 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
   Widget build(BuildContext context) {
     final profile = widget.profile;
     final unlocked = profile.isActive && profile.areRequirementsMet;
-    return GestureDetector(
+    return Semantics(
+      label: '${profile.name}, ${profile.subtitle}, ${profile.isActive ? S.current.activateShield : S.current.shieldsInactive}',
+      child: GestureDetector(
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -863,14 +880,20 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                 if (profile.isActive) const SizedBox(width: 8),
 
                 // ── Toggle ───────────────────────────────────────────────
-                GestureDetector(
-                  onTap: widget.onToggle,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 52,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
+                Semantics(
+                  label: profile.isActive
+                      ? S.current.deactivateShield
+                      : S.current.activateShield,
+                  button: true,
+                  toggled: profile.isActive,
+                  child: GestureDetector(
+                    onTap: widget.onToggle,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 52,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
                       color: profile.isActive
                           ? profile.color
                           : kBorder,
@@ -891,6 +914,7 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                       ),
                     ),
                   ),
+                ),
                 ),
               ],
             ),
@@ -934,8 +958,12 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
               const SizedBox(height: 10),
               const Divider(color: kBorder, height: 1),
               const SizedBox(height: 8),
-              ...profile.tasks.map((task) => GestureDetector(
+              ...profile.tasks.map((task) => Semantics(
+                    label: '${task.title}, ${task.isDone ? S.current.allTasksDoneNote : S.current.tasks}',
+                    checked: task.isDone,
+                    child: GestureDetector(
                     onTap: () {
+                      HapticFeedback.selectionClick();
                       ref
                           .read(profilesProvider.notifier)
                           .toggleTask(profile.id, task.id);
@@ -974,11 +1002,12 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                         ],
                       ),
                     ),
-                  )),
+                  ))),
             ],
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -1620,6 +1649,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         bgColor: kSurface,
                         borderColor: kBorder,
                         onPressed: () {
+                          HapticFeedback.heavyImpact();
                           showDialog(
                             context: context,
                             barrierDismissible: false,
@@ -1649,9 +1679,12 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         bgColor: p.hasAppsSelected ? accent : kSurface,
                         borderColor: p.hasAppsSelected ? null : kBorder,
                         onPressed: p.hasAppsSelected
-                            ? () => ref
-                                .read(profilesProvider.notifier)
-                                .activateProfile(p.id)
+                            ? () {
+                                HapticFeedback.heavyImpact();
+                                ref
+                                    .read(profilesProvider.notifier)
+                                    .activateProfile(p.id);
+                              }
                             : () {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -2377,9 +2410,12 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                   children: [
                     // Checkbox
                     GestureDetector(
-                      onTap: () => ref
-                          .read(profilesProvider.notifier)
-                          .toggleTask(widget.profile.id, task.id),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(profilesProvider.notifier)
+                            .toggleTask(widget.profile.id, task.id);
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: 24,

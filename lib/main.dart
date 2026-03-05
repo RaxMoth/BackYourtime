@@ -31,7 +31,13 @@ class MyApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       locale: Locale(langCode),
-      supportedLocales: const [Locale('en'), Locale('de')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('de'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('hr'),
+      ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
