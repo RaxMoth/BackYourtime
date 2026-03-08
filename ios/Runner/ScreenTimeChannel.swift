@@ -73,8 +73,8 @@ class ScreenTimeChannel {
 
     private func applyShield(result: FlutterResult) {
         guard let data = sharedDefaults.data(forKey: "blockedApps"),
-              let selection = try? NSKeyedUnarchiver.unarchivedObject(
-                  ofClass: FamilyActivitySelection.self, from: data) else {
+              let selection = try? JSONDecoder().decode(
+                  FamilyActivitySelection.self, from: data) else {
             result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
             return
         }
@@ -108,8 +108,8 @@ class ScreenTimeChannel {
 
     private func startUsageLimit(minutes: Int, result: FlutterResult) {
         guard let data = sharedDefaults.data(forKey: "blockedApps"),
-              let selection = try? NSKeyedUnarchiver.unarchivedObject(
-                  ofClass: FamilyActivitySelection.self, from: data) else {
+              let selection = try? JSONDecoder().decode(
+                  FamilyActivitySelection.self, from: data) else {
             result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
             return
         }
@@ -135,10 +135,10 @@ class ScreenTimeChannel {
 
 // MARK: - DeviceActivityName extension
 extension DeviceActivityName {
-    static let focusSchedule = Self("focuslock.schedule")
-    static let focusLimit    = Self("focuslock.limit")
+    static let focusSchedule = Self("unspend.schedule")
+    static let focusLimit    = Self("unspend.limit")
 }
 
 extension DeviceActivityEvent.Name {
-    static let limitReached = Self("focuslock.limitReached")
+    static let limitReached = Self("unspend.limitReached")
 }

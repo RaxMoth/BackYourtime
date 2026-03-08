@@ -13,7 +13,7 @@ import 'shield_activity_provider.dart';
 // ── Feature flag ───────────────────────────────────────────────────────────
 /// Set to `false` once your Apple Developer license is active
 /// and the FamilyControls capability is configured.
-const kUseMockScreenTime = true;
+const kUseMockScreenTime = false;
 
 // ── Persistence keys ───────────────────────────────────────────────────────
 const _kProfilesKey = 'blocker_profiles_v3';

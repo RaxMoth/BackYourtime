@@ -3,7 +3,6 @@ import ManagedSettings
 import FamilyControls
 import Foundation
 
-@main
 class FocusMonitor: DeviceActivityMonitor {
     private let store = ManagedSettingsStore()
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
@@ -30,8 +29,8 @@ class FocusMonitor: DeviceActivityMonitor {
 
     private func applyShield() {
         guard let data = sharedDefaults.data(forKey: "blockedApps"),
-              let selection = try? NSKeyedUnarchiver.unarchivedObject(
-                  ofClass: FamilyActivitySelection.self, from: data) else { return }
+              let selection = try? JSONDecoder().decode(
+                  FamilyActivitySelection.self, from: data) else { return }
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
     }

@@ -68,5 +68,7 @@
 	</array>
 	<key>NSFamilyControlsUsageDescription</key>
 	<string>Unspend needs this permission to block the apps you select.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

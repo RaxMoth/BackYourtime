@@ -10,8 +10,7 @@ class AppPickerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let pickerView = AppPickerView(onSave: { [weak self] selection in
-            if let data = try? NSKeyedArchiver.archivedData(
-                withRootObject: selection, requiringSecureCoding: true) {
+            if let data = try? JSONEncoder().encode(selection) {
                 self?.sharedDefaults.set(data, forKey: "blockedApps")
             }
             self?.dismiss(animated: true) {
