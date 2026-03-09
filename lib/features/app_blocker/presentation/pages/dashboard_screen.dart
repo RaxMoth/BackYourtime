@@ -36,8 +36,9 @@ class DashboardScreen extends ConsumerWidget {
         child: profilesAsync.when(
           loading: () =>
               const Center(child: CircularProgressIndicator(color: kAccent)),
-          error: (e, _) =>
-              Center(child: Text(S.current.errorGeneric(e), style: const TextStyle(color: kAccent))),
+          error: (e, _) => Center(
+              child: Text(S.current.errorGeneric(e),
+                  style: const TextStyle(color: kAccent))),
           data: (profiles) => _DashboardBody(profiles: profiles),
         ),
       ),
@@ -261,7 +262,7 @@ class _DashboardBody extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverList.separated(
             itemCount: profiles.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final profile = profiles[index];
               return _ProfileCard(
@@ -293,8 +294,7 @@ class _DashboardBody extends ConsumerWidget {
                         ),
                       ),
                     );
-                  } else if (profile.taskModeEnabled &&
-                      profile.tasks.isEmpty) {
+                  } else if (profile.taskModeEnabled && profile.tasks.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -405,8 +405,7 @@ class _DashboardBody extends ConsumerWidget {
                     Icon(Icons.brightness_6_rounded, color: kTextSecondary),
                 title: Text(S.current.themeLabel,
                     style: TextStyle(color: kTextPrimary)),
-                subtitle: Text(
-                    _currentThemeModeName(ref),
+                subtitle: Text(_currentThemeModeName(ref),
                     style: TextStyle(color: kTextSecondary, fontSize: 12)),
                 trailing:
                     Icon(Icons.chevron_right_rounded, color: kTextSecondary),
@@ -420,12 +419,10 @@ class _DashboardBody extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               ListTile(
-                leading:
-                    Icon(Icons.language_rounded, color: kTextSecondary),
+                leading: Icon(Icons.language_rounded, color: kTextSecondary),
                 title: Text(S.current.languageLabel,
                     style: TextStyle(color: kTextPrimary)),
-                subtitle: Text(
-                    _currentLanguageName(),
+                subtitle: Text(_currentLanguageName(),
                     style: TextStyle(color: kTextSecondary, fontSize: 12)),
                 trailing:
                     Icon(Icons.chevron_right_rounded, color: kTextSecondary),
@@ -525,7 +522,9 @@ class _DashboardBody extends ConsumerWidget {
   }) {
     return ListTile(
       leading: Icon(
-        selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+        selected
+            ? Icons.radio_button_checked_rounded
+            : Icons.radio_button_off_rounded,
         color: selected ? kAccent : kTextSecondary,
       ),
       title: Text(label, style: TextStyle(color: kTextPrimary)),
@@ -543,8 +542,8 @@ class _DashboardBody extends ConsumerWidget {
     final mode = ref.read(themeModeProvider);
     return switch (mode) {
       ThemeMode.system => S.current.themeSystem,
-      ThemeMode.light  => S.current.themeLight,
-      ThemeMode.dark   => S.current.themeDark,
+      ThemeMode.light => S.current.themeLight,
+      ThemeMode.dark => S.current.themeDark,
     };
   }
 
@@ -596,9 +595,21 @@ class _DashboardBody extends ConsumerWidget {
   }
 
   static final _themeEntries = [
-    (mode: ThemeMode.system, label: () => S.current.themeSystem, icon: Icons.brightness_auto_rounded),
-    (mode: ThemeMode.light,  label: () => S.current.themeLight,  icon: Icons.light_mode_rounded),
-    (mode: ThemeMode.dark,   label: () => S.current.themeDark,   icon: Icons.dark_mode_rounded),
+    (
+      mode: ThemeMode.system,
+      label: () => S.current.themeSystem,
+      icon: Icons.brightness_auto_rounded
+    ),
+    (
+      mode: ThemeMode.light,
+      label: () => S.current.themeLight,
+      icon: Icons.light_mode_rounded
+    ),
+    (
+      mode: ThemeMode.dark,
+      label: () => S.current.themeDark,
+      icon: Icons.dark_mode_rounded
+    ),
   ];
 
   Widget _themeOption(
@@ -611,7 +622,9 @@ class _DashboardBody extends ConsumerWidget {
   }) {
     return ListTile(
       leading: Icon(
-        selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+        selected
+            ? Icons.radio_button_checked_rounded
+            : Icons.radio_button_off_rounded,
         color: selected ? kAccent : kTextSecondary,
       ),
       title: Row(
@@ -767,9 +780,7 @@ class _SummaryCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: anyActive
-                  ? kAccentDark.withValues(alpha: 0.6)
-                  : kBorder,
+              color: anyActive ? kAccentDark.withValues(alpha: 0.6) : kBorder,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
@@ -787,7 +798,8 @@ class _SummaryCard extends StatelessWidget {
                   anyActive
                       ? allActive
                           ? S.current.allShieldsActive
-                          : S.current.someShieldsActive(activeCount, totalProfiles)
+                          : S.current
+                              .someShieldsActive(activeCount, totalProfiles)
                       : totalProfiles == 0
                           ? S.current.noProfiles
                           : S.current.shieldsInactive,
@@ -997,8 +1009,8 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
     // Align to Monday-based weeks so rows = Mon…Sun.
     final todayWeekday = today.weekday; // 1=Mon … 7=Sun
     final endOfGrid = today;
-    final startOfGrid =
-        endOfGrid.subtract(Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)));
+    final startOfGrid = endOfGrid
+        .subtract(Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)));
 
     // Determine which months appear at the top of each column.
     final monthHeaders = <int, String>{};
@@ -1014,153 +1026,152 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          // ── Title row ─────────────────────────────────────────────
-          Row(
+        // ── Title row ─────────────────────────────────────────────
+        Row(
+          children: [
+            Icon(Icons.grid_view_rounded, color: kTextSecondary, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              S.current.shieldActivity,
+              style: TextStyle(
+                color: kTextSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // ── Scrollable grid area ──────────────────────────────────
+        SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.grid_view_rounded, color: kTextSecondary, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                S.current.shieldActivity,
-                style: TextStyle(
-                  color: kTextSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+              // ── Month labels row ────────────────────────────────
+              SizedBox(
+                height: 14,
+                child: Row(
+                  children: [
+                    SizedBox(width: _dayLabelWidth),
+                    ...List.generate(_weeks, (col) {
+                      final label = monthHeaders[col];
+                      return SizedBox(
+                        width: _cellSize + _cellGap,
+                        child: label != null
+                            ? Text(
+                                label,
+                                style: TextStyle(
+                                  color: kTextSecondary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.visible,
+                                softWrap: false,
+                              )
+                            : const SizedBox.shrink(),
+                      );
+                    }),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
+              const SizedBox(height: 4),
 
-          // ── Scrollable grid area ──────────────────────────────────
-          SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Month labels row ────────────────────────────────
-                SizedBox(
-                  height: 14,
+              // ── Grid: 7 rows (Mon..Sun) × _weeks columns ───────
+              ...List.generate(7, (row) {
+                final dayLabel = S.current.dayLabels[row];
+                final showLabel = row == 0 || row == 2 || row == 4;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: row < 6 ? _cellGap : 0),
                   child: Row(
                     children: [
-                      SizedBox(width: _dayLabelWidth),
+                      SizedBox(
+                        width: _dayLabelWidth,
+                        child: showLabel
+                            ? Text(
+                                dayLabel,
+                                style: TextStyle(
+                                  color: kTextSecondary,
+                                  fontSize: 9,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                       ...List.generate(_weeks, (col) {
-                        final label = monthHeaders[col];
-                        return SizedBox(
-                          width: _cellSize + _cellGap,
-                          child: label != null
-                              ? Text(
-                                  label,
-                                  style: TextStyle(
-                                    color: kTextSecondary,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.visible,
-                                  softWrap: false,
-                                )
-                              : const SizedBox.shrink(),
+                        final date =
+                            startOfGrid.add(Duration(days: col * 7 + row));
+                        final dateStr = date.toIso8601String().substring(0, 10);
+                        final count = log[dateStr] ?? 0;
+                        final isFuture = date.isAfter(today);
+
+                        return Padding(
+                          padding: EdgeInsets.only(
+                              right: col < _weeks - 1 ? _cellGap : 0),
+                          child: Tooltip(
+                            message: isFuture
+                                ? ''
+                                : '${_fmtDate(date)}: ${S.current.shieldsOnDay(count)}',
+                            child: Container(
+                              width: _cellSize,
+                              height: _cellSize,
+                              decoration: BoxDecoration(
+                                color: isFuture
+                                    ? Colors.transparent
+                                    : _cellColor(count, effectiveMax),
+                                borderRadius: BorderRadius.circular(3),
+                                border: isFuture
+                                    ? null
+                                    : Border.all(
+                                        color: kBorder.withValues(alpha: 0.5),
+                                        width: 0.5,
+                                      ),
+                              ),
+                            ),
+                          ),
                         );
                       }),
                     ],
                   ),
-                ),
-                const SizedBox(height: 4),
-
-                // ── Grid: 7 rows (Mon..Sun) × _weeks columns ───────
-                ...List.generate(7, (row) {
-                  final dayLabel = S.current.dayLabels[row];
-                  final showLabel = row == 0 || row == 2 || row == 4;
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: row < 6 ? _cellGap : 0),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: _dayLabelWidth,
-                          child: showLabel
-                              ? Text(
-                                  dayLabel,
-                                  style: TextStyle(
-                                    color: kTextSecondary,
-                                    fontSize: 9,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                        ...List.generate(_weeks, (col) {
-                          final date =
-                              startOfGrid.add(Duration(days: col * 7 + row));
-                          final dateStr =
-                              date.toIso8601String().substring(0, 10);
-                          final count = log[dateStr] ?? 0;
-                          final isFuture = date.isAfter(today);
-
-                          return Padding(
-                            padding: EdgeInsets.only(
-                                right: col < _weeks - 1 ? _cellGap : 0),
-                            child: Tooltip(
-                              message: isFuture
-                                  ? ''
-                                  : '${_fmtDate(date)}: ${S.current.shieldsOnDay(count)}',
-                              child: Container(
-                                width: _cellSize,
-                                height: _cellSize,
-                                decoration: BoxDecoration(
-                                  color: isFuture
-                                      ? Colors.transparent
-                                      : _cellColor(count, effectiveMax),
-                                  borderRadius: BorderRadius.circular(3),
-                                  border: isFuture
-                                      ? null
-                                      : Border.all(
-                                          color: kBorder.withValues(alpha: 0.5),
-                                          width: 0.5,
-                                        ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // ── Legend ─────────────────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(S.current.less,
-                  style: TextStyle(color: kTextSecondary, fontSize: 9)),
-              const SizedBox(width: 4),
-              ...List.generate(5, (i) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 2),
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: _cellColor(i, 4),
-                      borderRadius: BorderRadius.circular(2),
-                      border: Border.all(
-                        color: kBorder.withValues(alpha: 0.5),
-                        width: 0.5,
-                      ),
-                    ),
-                  ),
                 );
               }),
-              const SizedBox(width: 4),
-              Text(S.current.more,
-                  style: TextStyle(color: kTextSecondary, fontSize: 9)),
             ],
           ),
-        ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // ── Legend ─────────────────────────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(S.current.less,
+                style: TextStyle(color: kTextSecondary, fontSize: 9)),
+            const SizedBox(width: 4),
+            ...List.generate(5, (i) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 2),
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: _cellColor(i, 4),
+                    borderRadius: BorderRadius.circular(2),
+                    border: Border.all(
+                      color: kBorder.withValues(alpha: 0.5),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(width: 4),
+            Text(S.current.more,
+                style: TextStyle(color: kTextSecondary, fontSize: 9)),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1216,7 +1227,9 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
     if (widget.profile.isActive && !widget.profile.isManualOnly) {
       _ticker = Timer.periodic(
         const Duration(seconds: 30),
-        (_) { if (mounted) setState(() {}); },
+        (_) {
+          if (mounted) setState(() {});
+        },
       );
     }
   }
@@ -1232,226 +1245,223 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
     final profile = widget.profile;
     final unlocked = profile.isActive && profile.areRequirementsMet;
     return Semantics(
-      label: '${profile.name}, ${profile.subtitle}, ${profile.isActive ? S.current.activateShield : S.current.shieldsInactive}',
+      label:
+          '${profile.name}, ${profile.subtitle}, ${profile.isActive ? S.current.activateShield : S.current.shieldsInactive}',
       child: GestureDetector(
-      onTap: widget.onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: kSurface,
-          borderRadius: BorderRadius.circular(kRadius),
-          border: Border.all(
-            color: profile.isActive
-                ? profile.color.withValues(alpha: 0.4)
-                : kBorder,
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // ── Icon ─────────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: profile.isActive
-                        ? profile.color.withValues(alpha: 0.15)
-                        : kBorder,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    profile.profileIcon.icon,
-                    size: 24,
-                    color:
-                        profile.isActive ? profile.color : kTextSecondary,
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // ── Name + subtitle ──────────────────────────────────────
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.name,
-                        style: TextStyle(
-                          color: kTextPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profile.subtitle,
-                        style: TextStyle(
-                            color: kTextSecondary, fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // ── Lock / Unlock indicator ────────────────────────────
-                if (profile.isActive)
-                  Tooltip(
-                    message: profile.requirementReason,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: (unlocked
-                                ? const Color(0xFF43A047)
-                                : profile.color)
-                            .withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        unlocked
-                            ? Icons.lock_open_rounded
-                            : Icons.lock_rounded,
-                        size: 18,
-                        color: unlocked
-                            ? const Color(0xFF43A047)
-                            : profile.color,
-                      ),
-                    ),
-                  ),
-                if (profile.isActive) const SizedBox(width: 8),
-
-                // ── Toggle ───────────────────────────────────────────────
-                Semantics(
-                  label: profile.isActive
-                      ? S.current.deactivateShield
-                      : S.current.activateShield,
-                  button: true,
-                  toggled: profile.isActive,
-                  child: GestureDetector(
-                    onTap: widget.onToggle,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      width: 52,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                      color: profile.isActive
-                          ? profile.color
-                          : kBorder,
-                    ),
-                    child: AnimatedAlign(
-                      duration: const Duration(milliseconds: 250),
-                      alignment: profile.isActive
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        decoration: BoxDecoration(
-                          color: kTextPrimary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                ),
-              ],
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: kSurface,
+            borderRadius: BorderRadius.circular(kRadius),
+            border: Border.all(
+              color: profile.isActive
+                  ? profile.color.withValues(alpha: 0.4)
+                  : kBorder,
             ),
-
-            // ── Mode chips ─────────────────────────────────────────────
-            if (profile.scheduleEnabled ||
-                profile.usageLimitEnabled ||
-                profile.taskModeEnabled) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  if (profile.scheduleEnabled)
-                    _ModeChip(
-                      icon: Icons.schedule_rounded,
-                      label: S.current.scheduleTitle,
-                      color: profile.color,
-                      isActive: profile.isActive,
+                  // ── Icon ─────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: profile.isActive
+                          ? profile.color.withValues(alpha: 0.15)
+                          : kBorder,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  if (profile.usageLimitEnabled)
-                    _ModeChip(
-                      icon: Icons.timer_rounded,
-                      label: S.current.usageLimitTitle,
-                      color: profile.color,
-                      isActive: profile.isActive,
+                    child: Icon(
+                      profile.profileIcon.icon,
+                      size: 24,
+                      color: profile.isActive ? profile.color : kTextSecondary,
                     ),
-                  if (profile.taskModeEnabled)
-                    _ModeChip(
-                      icon: Icons.checklist_rounded,
-                      label: S.current.taskModeTitle,
-                      color: profile.color,
-                      isActive: profile.isActive,
-                    ),
-                ],
-              ),
-            ],
+                  ),
+                  const SizedBox(width: 14),
 
-            // ── Inline task list ───────────────────────────────────────
-            if (profile.taskModeEnabled && profile.tasks.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Divider(color: kBorder, height: 1),
-              const SizedBox(height: 8),
-              ...profile.tasks.map((task) => Semantics(
-                    label: '${task.title}, ${task.isDone ? S.current.allTasksDoneNote : S.current.tasks}',
-                    checked: task.isDone,
-                    child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      ref
-                          .read(profilesProvider.notifier)
-                          .toggleTask(profile.id, task.id);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Icon(
-                            task.isDone
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            size: 18,
-                            color: task.isDone
-                                ? profile.color
-                                : kTextSecondary,
+                  // ── Name + subtitle ──────────────────────────────────────
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.name,
+                          style: TextStyle(
+                            color: kTextPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              task.title,
-                              style: TextStyle(
-                                color: task.isDone
-                                    ? kTextSecondary
-                                    : kTextPrimary,
-                                fontSize: 13,
-                                decoration: task.isDone
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                                decorationColor: kTextSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          profile.subtitle,
+                          style: TextStyle(color: kTextSecondary, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // ── Lock / Unlock indicator ────────────────────────────
+                  if (profile.isActive)
+                    Tooltip(
+                      message: profile.requirementReason,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: (unlocked
+                                  ? const Color(0xFF43A047)
+                                  : profile.color)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          unlocked
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_rounded,
+                          size: 18,
+                          color: unlocked
+                              ? const Color(0xFF43A047)
+                              : profile.color,
+                        ),
+                      ),
+                    ),
+                  if (profile.isActive) const SizedBox(width: 8),
+
+                  // ── Toggle ───────────────────────────────────────────────
+                  Semantics(
+                    label: profile.isActive
+                        ? S.current.deactivateShield
+                        : S.current.activateShield,
+                    button: true,
+                    toggled: profile.isActive,
+                    child: GestureDetector(
+                      onTap: widget.onToggle,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: 52,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: profile.isActive ? profile.color : kBorder,
+                        ),
+                        child: AnimatedAlign(
+                          duration: const Duration(milliseconds: 250),
+                          alignment: profile.isActive
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            decoration: BoxDecoration(
+                              color: kTextPrimary,
+                              shape: BoxShape.circle,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ))),
+                  ),
+                ],
+              ),
+
+              // ── Mode chips ─────────────────────────────────────────────
+              if (profile.scheduleEnabled ||
+                  profile.usageLimitEnabled ||
+                  profile.taskModeEnabled) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    if (profile.scheduleEnabled)
+                      _ModeChip(
+                        icon: Icons.schedule_rounded,
+                        label: S.current.scheduleTitle,
+                        color: profile.color,
+                        isActive: profile.isActive,
+                      ),
+                    if (profile.usageLimitEnabled)
+                      _ModeChip(
+                        icon: Icons.timer_rounded,
+                        label: S.current.usageLimitTitle,
+                        color: profile.color,
+                        isActive: profile.isActive,
+                      ),
+                    if (profile.taskModeEnabled)
+                      _ModeChip(
+                        icon: Icons.checklist_rounded,
+                        label: S.current.taskModeTitle,
+                        color: profile.color,
+                        isActive: profile.isActive,
+                      ),
+                  ],
+                ),
+              ],
+
+              // ── Inline task list ───────────────────────────────────────
+              if (profile.taskModeEnabled && profile.tasks.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Divider(color: kBorder, height: 1),
+                const SizedBox(height: 8),
+                ...profile.tasks.map((task) => Semantics(
+                    label:
+                        '${task.title}, ${task.isDone ? S.current.allTasksDoneNote : S.current.tasks}',
+                    checked: task.isDone,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(profilesProvider.notifier)
+                            .toggleTask(profile.id, task.id);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              task.isDone
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 18,
+                              color:
+                                  task.isDone ? profile.color : kTextSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                task.title,
+                                style: TextStyle(
+                                  color: task.isDone
+                                      ? kTextSecondary
+                                      : kTextPrimary,
+                                  fontSize: 13,
+                                  decoration: task.isDone
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  decorationColor: kTextSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ))),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -1640,8 +1650,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back_rounded,
-                        color: kTextPrimary),
+                    icon: Icon(Icons.arrow_back_rounded, color: kTextPrimary),
                     onPressed: () {
                       _save();
                       Navigator.of(context).pop();
@@ -1725,7 +1734,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   color: pc.color,
                                   shape: BoxShape.circle,
                                   border: isSelected
-                                      ? Border.all(color: kTextPrimary, width: 2.5)
+                                      ? Border.all(
+                                          color: kTextPrimary, width: 2.5)
                                       : null,
                                 ),
                                 child: isSelected
@@ -1771,7 +1781,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                 ),
                                 child: Icon(pi.icon,
                                     size: 22,
-                                    color: isSelected ? accent : kTextSecondary),
+                                    color:
+                                        isSelected ? accent : kTextSecondary),
                               ),
                             );
                           }).toList(),
@@ -1858,7 +1869,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           ? S.current.settingsLockedWhileActive
                           : S.current.blockRulesDescription,
                       style: TextStyle(
-                        color: locked ? kAccent.withValues(alpha: 0.8) : kTextSecondary,
+                        color: locked
+                            ? kAccent.withValues(alpha: 0.8)
+                            : kTextSecondary,
                         fontSize: 12,
                         fontStyle: locked ? FontStyle.italic : FontStyle.normal,
                       ),
@@ -2007,7 +2020,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                             horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: kBorder,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           '${_usageLimitMinutes}m',
@@ -2045,8 +2059,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                     ),
                                   ),
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -2166,16 +2180,20 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                         .activateProfile(p.id);
                                   } catch (_) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            S.current.errorGeneric('Activation failed'),
-                                            style: TextStyle(color: kTextPrimary),
+                                            S.current.errorGeneric(
+                                                'Activation failed'),
+                                            style:
+                                                TextStyle(color: kTextPrimary),
                                           ),
                                           backgroundColor: kSurface,
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                         ),
                                       );
@@ -2244,8 +2262,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                   .deleteProfile(widget.profile.id);
               if (context.mounted) Navigator.of(context).pop();
             },
-            child:
-                Text(S.current.delete, style: TextStyle(color: kAccent)),
+            child: Text(S.current.delete, style: TextStyle(color: kAccent)),
           ),
         ],
       ),
@@ -2344,7 +2361,8 @@ class _RuleToggleCard extends StatelessWidget {
                       ),
                       if (locked) ...[
                         const SizedBox(width: 6),
-                        Icon(Icons.lock_rounded, size: 14,
+                        Icon(Icons.lock_rounded,
+                            size: 14,
                             color: kTextSecondary.withValues(alpha: 0.6)),
                       ],
                     ],
@@ -2414,9 +2432,7 @@ class _TimeTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style:
-                    TextStyle(color: kTextSecondary, fontSize: 11)),
+            Text(label, style: TextStyle(color: kTextSecondary, fontSize: 11)),
             const SizedBox(height: 4),
             Text(
               formatted,
@@ -2458,8 +2474,7 @@ class _FullWidthButton extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor:
-              enabled ? bgColor : bgColor.withValues(alpha: 0.3),
+          backgroundColor: enabled ? bgColor : bgColor.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -2542,8 +2557,7 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
               () => setState(() => _obscureConfirm = !_obscureConfirm)),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!,
-                style: const TextStyle(color: kAccent, fontSize: 12)),
+            Text(_error!, style: const TextStyle(color: kAccent, fontSize: 12)),
           ],
         ],
       ),
@@ -2701,14 +2715,17 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
+          child:
+              Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
         ),
         if (_step == _DeactivateStep.enterPin)
           TextButton(
-            onPressed: _pinRequired ? _verifyAndDeactivate : () {
-              Navigator.pop(context);
-              widget.onConfirm();
-            },
+            onPressed: _pinRequired
+                ? _verifyAndDeactivate
+                : () {
+                    Navigator.pop(context);
+                    widget.onConfirm();
+                  },
             child: Text(S.current.deactivateAction,
                 style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
           ),
@@ -2765,8 +2782,7 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
           style: TextStyle(color: kTextPrimary, fontSize: 16),
           decoration: InputDecoration(
             labelText: S.current.pinLabel,
-            labelStyle:
-                TextStyle(color: kTextSecondary, fontSize: 13),
+            labelStyle: TextStyle(color: kTextSecondary, fontSize: 13),
             filled: true,
             fillColor: kBg,
             border: OutlineInputBorder(
@@ -2851,9 +2867,7 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
   void _addTask() {
     final title = _taskController.text.trim();
     if (title.isEmpty) return;
-    ref
-        .read(profilesProvider.notifier)
-        .addTask(widget.profile.id, title);
+    ref.read(profilesProvider.notifier).addTask(widget.profile.id, title);
     _taskController.clear();
   }
 
@@ -2867,215 +2881,213 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
-          Row(
-            children: [
-              Icon(Icons.checklist_rounded,
-                  color: widget.accent, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  S.current.tasks,
-                  style: TextStyle(
-                    color: kTextPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              if (tasks.isNotEmpty)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: doneCount == tasks.length
-                        ? Colors.green.withValues(alpha: 0.15)
-                        : widget.accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                Icon(Icons.checklist_rounded, color: widget.accent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
                   child: Text(
-                    '$doneCount / ${tasks.length}',
+                    S.current.tasks,
                     style: TextStyle(
-                      color: doneCount == tasks.length
-                          ? Colors.green
-                          : widget.accent,
-                      fontSize: 12,
+                      color: kTextPrimary,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-            ],
-          ),
-          if (tasks.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            // Progress bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: tasks.isEmpty ? 0 : doneCount / tasks.length,
-                backgroundColor: kBorder,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  doneCount == tasks.length ? Colors.green : widget.accent,
-                ),
-                minHeight: 4,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-
-          // Task items
-          ...tasks.map((task) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    // Checkbox
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        ref
-                            .read(profilesProvider.notifier)
-                            .toggleTask(widget.profile.id, task.id);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: task.isDone
-                              ? Colors.green.withValues(alpha: 0.2)
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: task.isDone ? Colors.green : kBorder,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: task.isDone
-                            ? const Icon(Icons.check_rounded,
-                                color: Colors.green, size: 16)
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Title
-                    Expanded(
-                      child: Text(
-                        task.title,
-                        style: TextStyle(
-                          color: task.isDone ? kTextSecondary : kTextPrimary,
-                          fontSize: 14,
-                          decoration: task.isDone
-                              ? TextDecoration.lineThrough
-                              : null,
-                          decorationColor: kTextSecondary,
-                        ),
-                      ),
-                    ),
-                    // Delete button (only when shield is NOT active)
-                    if (!isActive)
-                      GestureDetector(
-                        onTap: () => ref
-                            .read(profilesProvider.notifier)
-                            .removeTask(widget.profile.id, task.id),
-                        child: Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.close_rounded,
-                              color: kTextSecondary, size: 18),
-                        ),
-                      ),
-                  ],
-                ),
-              )),
-
-          // Add-task row (only when shield is NOT active)
-          if (!isActive) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _taskController,
-                    style: TextStyle(
-                        color: kTextPrimary, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: S.current.addTaskHint,
-                      hintStyle: TextStyle(
-                          color: kTextSecondary, fontSize: 14),
-                      isDense: true,
-                      filled: true,
-                      fillColor: kBg,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: kBorder),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: kBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: widget.accent),
-                      ),
-                    ),
-                    onSubmitted: (_) => _addTask(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: _addTask,
-                  child: Container(
-                    width: 38,
-                    height: 38,
+                if (tasks.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: widget.accent.withValues(alpha: 0.15),
+                      color: doneCount == tasks.length
+                          ? Colors.green.withValues(alpha: 0.15)
+                          : widget.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.add_rounded,
-                        color: widget.accent, size: 20),
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          // Info note when active
-          if (isActive && tasks.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    color: kTextSecondary, size: 14),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    doneCount == tasks.length
-                        ? S.current.allTasksDoneNote
-                        : S.current.tasksRemainingNote(tasks.length - doneCount),
-                    style: TextStyle(
-                      color: kTextSecondary,
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
+                    child: Text(
+                      '$doneCount / ${tasks.length}',
+                      style: TextStyle(
+                        color: doneCount == tasks.length
+                            ? Colors.green
+                            : widget.accent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
-          ],
-
-          if (tasks.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                S.current.emptyTasksHint,
-                style: TextStyle(color: kTextSecondary, fontSize: 12),
+            if (tasks.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              // Progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: tasks.isEmpty ? 0 : doneCount / tasks.length,
+                  backgroundColor: kBorder,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    doneCount == tasks.length ? Colors.green : widget.accent,
+                  ),
+                  minHeight: 4,
+                ),
               ),
-            ),
-        ],
-      ),
+            ],
+            const SizedBox(height: 12),
+
+            // Task items
+            ...tasks.map((task) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      // Checkbox
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          ref
+                              .read(profilesProvider.notifier)
+                              .toggleTask(widget.profile.id, task.id);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: task.isDone
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: task.isDone ? Colors.green : kBorder,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: task.isDone
+                              ? const Icon(Icons.check_rounded,
+                                  color: Colors.green, size: 16)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Title
+                      Expanded(
+                        child: Text(
+                          task.title,
+                          style: TextStyle(
+                            color: task.isDone ? kTextSecondary : kTextPrimary,
+                            fontSize: 14,
+                            decoration:
+                                task.isDone ? TextDecoration.lineThrough : null,
+                            decorationColor: kTextSecondary,
+                          ),
+                        ),
+                      ),
+                      // Delete button (only when shield is NOT active)
+                      if (!isActive)
+                        GestureDetector(
+                          onTap: () => ref
+                              .read(profilesProvider.notifier)
+                              .removeTask(widget.profile.id, task.id),
+                          child: Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.close_rounded,
+                                color: kTextSecondary, size: 18),
+                          ),
+                        ),
+                    ],
+                  ),
+                )),
+
+            // Add-task row (only when shield is NOT active)
+            if (!isActive) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _taskController,
+                      style: TextStyle(color: kTextPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: S.current.addTaskHint,
+                        hintStyle:
+                            TextStyle(color: kTextSecondary, fontSize: 14),
+                        isDense: true,
+                        filled: true,
+                        fillColor: kBg,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: kBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: kBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: widget.accent),
+                        ),
+                      ),
+                      onSubmitted: (_) => _addTask(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _addTask,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: widget.accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.add_rounded,
+                          color: widget.accent, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            // Info note when active
+            if (isActive && tasks.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      color: kTextSecondary, size: 14),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      doneCount == tasks.length
+                          ? S.current.allTasksDoneNote
+                          : S.current
+                              .tasksRemainingNote(tasks.length - doneCount),
+                      style: TextStyle(
+                        color: kTextSecondary,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            if (tasks.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  S.current.emptyTasksHint,
+                  style: TextStyle(color: kTextSecondary, fontSize: 12),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -3271,8 +3283,8 @@ class _WeekChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayLabels = S.current.dayLabels;
-    final maxVal = history
-        .fold<int>(1, (m, d) => d.totalMinutes > m ? d.totalMinutes : m);
+    final maxVal =
+        history.fold<int>(1, (m, d) => d.totalMinutes > m ? d.totalMinutes : m);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -3293,9 +3305,7 @@ class _WeekChart extends StatelessWidget {
                   duration: const Duration(milliseconds: 300),
                   height: (fraction * 50).clamp(4.0, 50.0),
                   decoration: BoxDecoration(
-                    color: isToday
-                        ? accent
-                        : accent.withValues(alpha: 0.3),
+                    color: isToday ? accent : accent.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
