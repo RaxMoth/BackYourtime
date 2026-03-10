@@ -23,7 +23,7 @@ class ScreenTimeChannel {
             Task { await requestAuth(result: result) }
 
         case "applyShield":
-            applyShield(result: result)
+            applyShield(call: call, result: result)
 
         case "removeShield":
             removeShield(result: result)
@@ -71,12 +71,17 @@ class ScreenTimeChannel {
         }
     }
 
-    private func applyShield(result: FlutterResult) {
+    private func applyShield(call: FlutterMethodCall, result: FlutterResult) {
         guard let data = sharedDefaults.data(forKey: "blockedApps"),
               let selection = try? JSONDecoder().decode(
                   FamilyActivitySelection.self, from: data) else {
             result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
             return
+        }
+        // Store active profile name for ShieldConfigurationExtension
+        if let args = call.arguments as? [String: Any],
+           let profileName = args["profileName"] as? String {
+            sharedDefaults.set(profileName, forKey: "activeProfileName")
         }
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
@@ -86,6 +91,7 @@ class ScreenTimeChannel {
     private func removeShield(result: FlutterResult) {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
+        sharedDefaults.removeObject(forKey: "activeProfileName")
         result(true)
     }
 

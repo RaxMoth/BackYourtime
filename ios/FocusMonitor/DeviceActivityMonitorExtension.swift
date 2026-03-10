@@ -18,6 +18,7 @@ class FocusMonitor: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
         store.shield.applications = nil
         store.shield.applicationCategories = nil
+        sharedDefaults.removeObject(forKey: "activeProfileName")
     }
 
     // Called when usage threshold is hit → apply shield

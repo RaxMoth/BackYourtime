@@ -18,7 +18,7 @@ class MockScreenTimeDatasource implements ScreenTimeDatasource {
   }
 
   @override
-  Future<bool> applyShield() async {
+  Future<bool> applyShield({String? profileName}) async {
     await Future.delayed(const Duration(milliseconds: 300));
     _shieldActive = true;
     return true;

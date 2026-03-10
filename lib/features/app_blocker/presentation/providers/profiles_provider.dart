@@ -29,9 +29,8 @@ const _kLegacyProfilesV1 = 'blocker_profiles';
 // ── Providers ──────────────────────────────────────────────────────────────
 
 final screenTimeDatasourceProvider = Provider<ScreenTimeDatasource>(
-  (_) => kUseMockScreenTime
-      ? MockScreenTimeDatasource()
-      : ScreenTimeDatasource(),
+  (_) =>
+      kUseMockScreenTime ? MockScreenTimeDatasource() : ScreenTimeDatasource(),
 );
 
 /// Manages the full list of [BlockerProfile]s.
@@ -78,9 +77,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     final profile = BlockerProfile(
       id: id,
       name: name,
-      colorValue: ProfileColor.palette[
-              _profiles.length % ProfileColor.palette.length]
-          .color
+      colorValue: ProfileColor
+          .palette[_profiles.length % ProfileColor.palette.length].color
           .toARGB32(),
     );
     final updated = [..._profiles, profile];
@@ -102,9 +100,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
             iconLabel: profile.iconLabel,
           )
         : profile;
-    final list = _profiles
-        .map((p) => p.id == effective.id ? effective : p)
-        .toList();
+    final list =
+        _profiles.map((p) => p.id == effective.id ? effective : p).toList();
     state = AsyncData(list);
     await _persist(list);
   }
@@ -128,7 +125,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     final list = _profiles.map((p) {
       if (p.id != id) return p;
       // Mock: random app count between 3-12
-      final count = kUseMockScreenTime ? (Random().nextInt(10) + 3) : p.appCount;
+      final count =
+          kUseMockScreenTime ? (Random().nextInt(10) + 3) : p.appCount;
       return p.copyWith(hasAppsSelected: true, appCount: count);
     }).toList();
     state = AsyncData(list);
@@ -142,7 +140,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     try {
       // Apply all enabled rules — they stack.
       // 1) Always apply the immediate shield (manual base).
-      await _ds.applyShield();
+      await _ds.applyShield(profileName: profile.name);
 
       // 2) Schedule: hard-block during a time window.
       if (profile.scheduleEnabled &&
@@ -388,8 +386,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
           final list = (json.decode(legacy) as List)
               .map((e) => BlockerProfile.fromJson(e as Map<String, dynamic>))
               .toList();
-          final encoded =
-              json.encode(list.map((p) => p.toJson()).toList());
+          final encoded = json.encode(list.map((p) => p.toJson()).toList());
           await prefs.setString(_kProfilesKey, encoded);
         } catch (e) {
           debugPrint('[ProfilesNotifier] Migration parse failed: $e');
@@ -401,7 +398,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }
 
     await prefs.setInt(_kSchemaVersionKey, _kCurrentSchemaVersion);
-    debugPrint('[ProfilesNotifier] Migrated to schema v$_kCurrentSchemaVersion');
+    debugPrint(
+        '[ProfilesNotifier] Migrated to schema v$_kCurrentSchemaVersion');
   }
 
   Future<void> _persist(List<BlockerProfile> profiles) async {
