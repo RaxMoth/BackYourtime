@@ -6,7 +6,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.maxroth.unspend</string>
+		<string>group.com.maxroth.backyourtime</string>
 	</array>
 </dict>
 </plist>
