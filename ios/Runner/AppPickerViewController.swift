@@ -22,31 +22,29 @@ class AppPickerViewController: UIViewController {
         let hostingController = UIHostingController(rootView: pickerView)
         addChild(hostingController)
         view.addSubview(hostingController.view)
-        hostingController.view.frame = view.bounds
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
         hostingController.didMove(toParent: self)
     }
 }
 
 private struct AppPickerView: View {
     @State private var selection = FamilyActivitySelection()
-    @State private var isPickerPresented = false
     var onSave: (FamilyActivitySelection) -> Void
     var onCancel: () -> Void
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Button("Select Apps to Block") {
-                    isPickerPresented = true
-                }
-                .buttonStyle(.borderedProminent)
-
-                if !selection.applicationTokens.isEmpty {
-                    Text("\(selection.applicationTokens.count) app(s) selected")
-                        .foregroundColor(.secondary)
-                }
+            VStack {
+                FamilyActivityPicker(selection: $selection)
             }
             .navigationTitle("Choose Apps")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { onCancel() }
@@ -57,6 +55,5 @@ private struct AppPickerView: View {
                 }
             }
         }
-        .familyActivityPicker(isPresented: $isPickerPresented, selection: $selection)
     }
 }

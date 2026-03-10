@@ -37,8 +37,11 @@ class DashboardScreen extends ConsumerWidget {
           loading: () =>
               const Center(child: CircularProgressIndicator(color: kAccent)),
           error: (e, _) => Center(
-              child: Text(S.current.errorGeneric(e),
-                  style: const TextStyle(color: kAccent))),
+            child: Text(
+              S.current.errorGeneric(e),
+              style: const TextStyle(color: kAccent),
+            ),
+          ),
           data: (profiles) => _DashboardBody(profiles: profiles),
         ),
       ),
@@ -47,6 +50,7 @@ class DashboardScreen extends ConsumerWidget {
 
   void _showCreateProfileSheet(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    var createdProfile = false;
     showModalBottomSheet(
       context: context,
       backgroundColor: kSurface,
@@ -98,7 +102,9 @@ class DashboardScreen extends ConsumerWidget {
               decoration: InputDecoration(
                 hintText: S.current.profileNameHint,
                 hintStyle: TextStyle(
-                    color: kTextSecondary.withValues(alpha: 0.5), fontSize: 15),
+                  color: kTextSecondary.withValues(alpha: 0.5),
+                  fontSize: 15,
+                ),
                 filled: true,
                 fillColor: kBg,
                 border: OutlineInputBorder(
@@ -121,15 +127,19 @@ class DashboardScreen extends ConsumerWidget {
                 final name = controller.text.trim();
                 if (name.isEmpty) return;
                 HapticFeedback.lightImpact();
+                createdProfile = true;
                 final id = await ref
                     .read(profilesProvider.notifier)
                     .createProfile(name: name);
+                controller.dispose();
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
                   // Navigate to the profile detail
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => _ProfileDetailPageShell(profileId: id),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _ProfileDetailPageShell(profileId: id),
+                    ),
+                  );
                 }
               },
               style: FilledButton.styleFrom(
@@ -137,15 +147,20 @@ class DashboardScreen extends ConsumerWidget {
                 foregroundColor: kTextPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: Text(S.current.create,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              child: Text(
+                S.current.create,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         ),
       ),
-    ).whenComplete(controller.dispose);
+    ).whenComplete(() {
+      if (!createdProfile) controller.dispose();
+    });
   }
 }
 
@@ -186,8 +201,11 @@ class _DashboardBody extends ConsumerWidget {
                     const Spacer(),
                     IconButton(
                       onPressed: () => _showSettingsSheet(context, ref),
-                      icon: Icon(Icons.settings_rounded,
-                          color: kTextSecondary, size: 22),
+                      icon: Icon(
+                        Icons.settings_rounded,
+                        color: kTextSecondary,
+                        size: 22,
+                      ),
                     ),
                   ],
                 ),
@@ -235,8 +253,11 @@ class _DashboardBody extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Column(
                 children: [
-                  Icon(Icons.add_circle_outline_rounded,
-                      color: kBorder, size: 64),
+                  Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: kBorder,
+                    size: 64,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     S.current.noProfilesYet,
@@ -268,11 +289,12 @@ class _DashboardBody extends ConsumerWidget {
               return _ProfileCard(
                 profile: profile,
                 onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => _ProfileDetailPageShell(
-                      profileId: profile.id,
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          _ProfileDetailPageShell(profileId: profile.id),
                     ),
-                  ));
+                  );
                 },
                 onToggle: () async {
                   HapticFeedback.mediumImpact();
@@ -340,7 +362,10 @@ class _DashboardBody extends ConsumerWidget {
   }
 
   void _showDeactivateDialog(
-      BuildContext context, WidgetRef ref, String profileId) {
+    BuildContext context,
+    WidgetRef ref,
+    String profileId,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -379,20 +404,28 @@ class _DashboardBody extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(S.current.settings,
-                  style: TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                S.current.settings,
+                style: TextStyle(
+                  color: kTextPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 20),
               ListTile(
                 leading: Icon(Icons.lock_rounded, color: kTextSecondary),
-                title: Text(S.current.changePin,
-                    style: TextStyle(color: kTextPrimary)),
-                subtitle: Text(S.current.changePinSubtitle,
-                    style: TextStyle(color: kTextSecondary, fontSize: 12)),
+                title: Text(
+                  S.current.changePin,
+                  style: TextStyle(color: kTextPrimary),
+                ),
+                subtitle: Text(
+                  S.current.changePinSubtitle,
+                  style: TextStyle(color: kTextSecondary, fontSize: 12),
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 tileColor: kBg,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -401,16 +434,25 @@ class _DashboardBody extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               ListTile(
-                leading:
-                    Icon(Icons.brightness_6_rounded, color: kTextSecondary),
-                title: Text(S.current.themeLabel,
-                    style: TextStyle(color: kTextPrimary)),
-                subtitle: Text(_currentThemeModeName(ref),
-                    style: TextStyle(color: kTextSecondary, fontSize: 12)),
-                trailing:
-                    Icon(Icons.chevron_right_rounded, color: kTextSecondary),
+                leading: Icon(
+                  Icons.brightness_6_rounded,
+                  color: kTextSecondary,
+                ),
+                title: Text(
+                  S.current.themeLabel,
+                  style: TextStyle(color: kTextPrimary),
+                ),
+                subtitle: Text(
+                  _currentThemeModeName(ref),
+                  style: TextStyle(color: kTextSecondary, fontSize: 12),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: kTextSecondary,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 tileColor: kBg,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -420,14 +462,21 @@ class _DashboardBody extends ConsumerWidget {
               const SizedBox(height: 8),
               ListTile(
                 leading: Icon(Icons.language_rounded, color: kTextSecondary),
-                title: Text(S.current.languageLabel,
-                    style: TextStyle(color: kTextPrimary)),
-                subtitle: Text(_currentLanguageName(),
-                    style: TextStyle(color: kTextSecondary, fontSize: 12)),
-                trailing:
-                    Icon(Icons.chevron_right_rounded, color: kTextSecondary),
+                title: Text(
+                  S.current.languageLabel,
+                  style: TextStyle(color: kTextPrimary),
+                ),
+                subtitle: Text(
+                  _currentLanguageName(),
+                  style: TextStyle(color: kTextSecondary, fontSize: 12),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: kTextSecondary,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 tileColor: kBg,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -477,19 +526,27 @@ class _DashboardBody extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(S.current.languageLabel,
-                  style: TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                S.current.languageLabel,
+                style: TextStyle(
+                  color: kTextPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
-              ..._languageEntries.map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _languageOption(ctx, ref,
-                        code: e.code,
-                        label: e.nativeName,
-                        selected: currentCode == e.code),
-                  )),
+              ..._languageEntries.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _languageOption(
+                    ctx,
+                    ref,
+                    code: e.code,
+                    label: e.nativeName,
+                    selected: currentCode == e.code,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -498,12 +555,12 @@ class _DashboardBody extends ConsumerWidget {
   }
 
   static String _currentLanguageName() => switch (S.langCode) {
-        'de' => 'Deutsch',
-        'es' => 'Español',
-        'fr' => 'Français',
-        'hr' => 'Hrvatski',
-        _ => 'English',
-      };
+    'de' => 'Deutsch',
+    'es' => 'Español',
+    'fr' => 'Français',
+    'hr' => 'Hrvatski',
+    _ => 'English',
+  };
 
   static final _languageEntries = [
     (code: 'en', nativeName: 'English'),
@@ -573,20 +630,28 @@ class _DashboardBody extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(S.current.themeLabel,
-                  style: TextStyle(
-                      color: kTextPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                S.current.themeLabel,
+                style: TextStyle(
+                  color: kTextPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
-              ..._themeEntries.map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _themeOption(ctx, ref,
-                        mode: e.mode,
-                        label: e.label(),
-                        icon: e.icon,
-                        selected: current == e.mode),
-                  )),
+              ..._themeEntries.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _themeOption(
+                    ctx,
+                    ref,
+                    mode: e.mode,
+                    label: e.label(),
+                    icon: e.icon,
+                    selected: current == e.mode,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -598,17 +663,17 @@ class _DashboardBody extends ConsumerWidget {
     (
       mode: ThemeMode.system,
       label: () => S.current.themeSystem,
-      icon: Icons.brightness_auto_rounded
+      icon: Icons.brightness_auto_rounded,
     ),
     (
       mode: ThemeMode.light,
       label: () => S.current.themeLight,
-      icon: Icons.light_mode_rounded
+      icon: Icons.light_mode_rounded,
     ),
     (
       mode: ThemeMode.dark,
       label: () => S.current.themeDark,
-      icon: Icons.dark_mode_rounded
+      icon: Icons.dark_mode_rounded,
     ),
   ];
 
@@ -719,8 +784,11 @@ class _StatisticsSectionState extends State<_StatisticsSection>
                   ),
                   RotationTransition(
                     turns: _rotateAnim,
-                    child: Icon(Icons.expand_more_rounded,
-                        color: kTextSecondary, size: 22),
+                    child: Icon(
+                      Icons.expand_more_rounded,
+                      color: kTextSecondary,
+                      size: 22,
+                    ),
                   ),
                 ],
               ),
@@ -797,12 +865,14 @@ class _SummaryCard extends StatelessWidget {
                 Text(
                   anyActive
                       ? allActive
-                          ? S.current.allShieldsActive
-                          : S.current
-                              .someShieldsActive(activeCount, totalProfiles)
+                            ? S.current.allShieldsActive
+                            : S.current.someShieldsActive(
+                                activeCount,
+                                totalProfiles,
+                              )
                       : totalProfiles == 0
-                          ? S.current.noProfiles
-                          : S.current.shieldsInactive,
+                      ? S.current.noProfiles
+                      : S.current.shieldsInactive,
                   style: TextStyle(
                     color: kTextPrimary,
                     fontSize: 18,
@@ -814,8 +884,8 @@ class _SummaryCard extends StatelessWidget {
                   anyActive
                       ? S.current.blockingDistractingApps
                       : totalProfiles == 0
-                          ? S.current.createProfileToStart
-                          : S.current.noProfilesAreActive,
+                      ? S.current.createProfileToStart
+                      : S.current.noProfilesAreActive,
                   style: TextStyle(color: kTextSecondary, fontSize: 13),
                 ),
               ],
@@ -951,10 +1021,7 @@ class _StatTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(color: kTextSecondary, fontSize: 11),
-          ),
+          Text(label, style: TextStyle(color: kTextSecondary, fontSize: 11)),
         ],
       ),
     );
@@ -1009,8 +1076,9 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
     // Align to Monday-based weeks so rows = Mon…Sun.
     final todayWeekday = today.weekday; // 1=Mon … 7=Sun
     final endOfGrid = today;
-    final startOfGrid = endOfGrid
-        .subtract(Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)));
+    final startOfGrid = endOfGrid.subtract(
+      Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)),
+    );
 
     // Determine which months appear at the top of each column.
     final monthHeaders = <int, String>{};
@@ -1100,15 +1168,17 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
                             : const SizedBox.shrink(),
                       ),
                       ...List.generate(_weeks, (col) {
-                        final date =
-                            startOfGrid.add(Duration(days: col * 7 + row));
+                        final date = startOfGrid.add(
+                          Duration(days: col * 7 + row),
+                        );
                         final dateStr = date.toIso8601String().substring(0, 10);
                         final count = log[dateStr] ?? 0;
                         final isFuture = date.isAfter(today);
 
                         return Padding(
                           padding: EdgeInsets.only(
-                              right: col < _weeks - 1 ? _cellGap : 0),
+                            right: col < _weeks - 1 ? _cellGap : 0,
+                          ),
                           child: Tooltip(
                             message: isFuture
                                 ? ''
@@ -1146,8 +1216,10 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text(S.current.less,
-                style: TextStyle(color: kTextSecondary, fontSize: 9)),
+            Text(
+              S.current.less,
+              style: TextStyle(color: kTextSecondary, fontSize: 9),
+            ),
             const SizedBox(width: 4),
             ...List.generate(5, (i) {
               return Padding(
@@ -1167,8 +1239,10 @@ class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
               );
             }),
             const SizedBox(width: 4),
-            Text(S.current.more,
-                style: TextStyle(color: kTextSecondary, fontSize: 9)),
+            Text(
+              S.current.more,
+              style: TextStyle(color: kTextSecondary, fontSize: 9),
+            ),
           ],
         ),
       ],
@@ -1225,12 +1299,9 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
   void _startTickerIfActive() {
     _ticker?.cancel();
     if (widget.profile.isActive && !widget.profile.isManualOnly) {
-      _ticker = Timer.periodic(
-        const Duration(seconds: 30),
-        (_) {
-          if (mounted) setState(() {});
-        },
-      );
+      _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (mounted) setState(() {});
+      });
     }
   }
 
@@ -1316,10 +1387,11 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: (unlocked
-                                  ? const Color(0xFF43A047)
-                                  : profile.color)
-                              .withValues(alpha: 0.15),
+                          color:
+                              (unlocked
+                                      ? const Color(0xFF43A047)
+                                      : profile.color)
+                                  .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -1412,7 +1484,8 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                 const SizedBox(height: 10),
                 Divider(color: kBorder, height: 1),
                 const SizedBox(height: 8),
-                ...profile.tasks.map((task) => Semantics(
+                ...profile.tasks.map(
+                  (task) => Semantics(
                     label:
                         '${task.title}, ${task.isDone ? S.current.allTasksDoneNote : S.current.tasks}',
                     checked: task.isDone,
@@ -1432,8 +1505,9 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                                   ? Icons.check_circle_rounded
                                   : Icons.radio_button_unchecked_rounded,
                               size: 18,
-                              color:
-                                  task.isDone ? profile.color : kTextSecondary,
+                              color: task.isDone
+                                  ? profile.color
+                                  : kTextSecondary,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -1456,7 +1530,9 @@ class _ProfileCardState extends ConsumerState<_ProfileCard> {
                           ],
                         ),
                       ),
-                    ))),
+                    ),
+                  ),
+                ),
               ],
             ],
           ),
@@ -1494,10 +1570,7 @@ class _ModeChip extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: chipColor),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(color: chipColor, fontSize: 11),
-          ),
+          Text(label, style: TextStyle(color: chipColor, fontSize: 11)),
         ],
       ),
     );
@@ -1609,21 +1682,23 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   Future<void> _save() async {
     final notifier = ref.read(profilesProvider.notifier);
-    await notifier.updateProfile(widget.profile.copyWith(
-      name: _nameController.text.trim().isEmpty
-          ? S.current.untitled
-          : _nameController.text.trim(),
-      colorValue: _selectedColorValue,
-      iconLabel: _selectedIconLabel,
-      scheduleEnabled: _scheduleEnabled,
-      usageLimitEnabled: _usageLimitEnabled,
-      taskModeEnabled: _taskModeEnabled,
-      scheduleStartHour: _startTime.hour,
-      scheduleStartMinute: _startTime.minute,
-      scheduleEndHour: _endTime.hour,
-      scheduleEndMinute: _endTime.minute,
-      usageLimitMinutes: _usageLimitMinutes,
-    ));
+    await notifier.updateProfile(
+      widget.profile.copyWith(
+        name: _nameController.text.trim().isEmpty
+            ? S.current.untitled
+            : _nameController.text.trim(),
+        colorValue: _selectedColorValue,
+        iconLabel: _selectedIconLabel,
+        scheduleEnabled: _scheduleEnabled,
+        usageLimitEnabled: _usageLimitEnabled,
+        taskModeEnabled: _taskModeEnabled,
+        scheduleStartHour: _startTime.hour,
+        scheduleStartMinute: _startTime.minute,
+        scheduleEndHour: _endTime.hour,
+        scheduleEndMinute: _endTime.minute,
+        usageLimitMinutes: _usageLimitMinutes,
+      ),
+    );
   }
 
   @override
@@ -1659,8 +1734,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                   const Spacer(),
                   if (!p.isActive)
                     IconButton(
-                      icon: Icon(Icons.delete_outline_rounded,
-                          color: kTextSecondary),
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: kTextSecondary,
+                      ),
                       onPressed: () => _confirmDelete(context),
                     ),
                 ],
@@ -1669,8 +1746,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -1723,8 +1802,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                 pc.color.toARGB32() == _selectedColorValue;
                             return GestureDetector(
                               onTap: () {
-                                setState(() =>
-                                    _selectedColorValue = pc.color.toARGB32());
+                                setState(
+                                  () =>
+                                      _selectedColorValue = pc.color.toARGB32(),
+                                );
                                 _save();
                               },
                               child: Container(
@@ -1735,12 +1816,17 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   shape: BoxShape.circle,
                                   border: isSelected
                                       ? Border.all(
-                                          color: kTextPrimary, width: 2.5)
+                                          color: kTextPrimary,
+                                          width: 2.5,
+                                        )
                                       : null,
                                 ),
                                 child: isSelected
-                                    ? Icon(Icons.check,
-                                        color: kTextPrimary, size: 18)
+                                    ? Icon(
+                                        Icons.check,
+                                        color: kTextPrimary,
+                                        size: 18,
+                                      )
                                     : null,
                               ),
                             );
@@ -1779,10 +1865,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                     color: isSelected ? accent : kBorder,
                                   ),
                                 ),
-                                child: Icon(pi.icon,
-                                    size: 22,
-                                    color:
-                                        isSelected ? accent : kTextSecondary),
+                                child: Icon(
+                                  pi.icon,
+                                  size: 22,
+                                  color: isSelected ? accent : kTextSecondary,
+                                ),
                               ),
                             );
                           }).toList(),
@@ -1807,8 +1894,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   .pickAppsForProfile(p.id);
                               // Prompt PIN setup after first app selection
                               if (!context.mounted) return;
-                              final notifier =
-                                  ref.read(profilesProvider.notifier);
+                              final notifier = ref.read(
+                                profilesProvider.notifier,
+                              );
                               final hasPin = await notifier.hasPinSet();
                               if (!context.mounted) return;
                               if (!hasPin) {
@@ -1823,11 +1911,16 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.apps_rounded,
-                                      color: accent, size: 22),
+                                  Icon(
+                                    Icons.apps_rounded,
+                                    color: accent,
+                                    size: 22,
+                                  ),
                                   const SizedBox(width: 12),
                                   Text(
                                     p.hasAppsSelected
@@ -1842,8 +1935,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                     ),
                                   ),
                                   const Spacer(),
-                                  Icon(Icons.chevron_right_rounded,
-                                      color: kTextSecondary, size: 22),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: kTextSecondary,
+                                    size: 22,
+                                  ),
                                 ],
                               ),
                             ),
@@ -1904,14 +2000,20 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.access_time_rounded,
-                                          color: accent, size: 20),
+                                      Icon(
+                                        Icons.access_time_rounded,
+                                        color: accent,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text(S.current.scheduleTitle,
-                                          style: TextStyle(
-                                              color: kTextPrimary,
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w600)),
+                                      Text(
+                                        S.current.scheduleTitle,
+                                        style: TextStyle(
+                                          color: kTextPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 14),
@@ -2006,22 +2108,31 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.timer_outlined,
-                                          color: accent, size: 20),
+                                      Icon(
+                                        Icons.timer_outlined,
+                                        color: accent,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text(S.current.dailyLimit,
-                                          style: TextStyle(
-                                              color: kTextPrimary,
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w600)),
+                                      Text(
+                                        S.current.dailyLimit,
+                                        style: TextStyle(
+                                          color: kTextPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                       const Spacer(),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 4),
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: kBorder,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           '${_usageLimitMinutes}m',
@@ -2040,11 +2151,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       activeTrackColor: accent,
                                       inactiveTrackColor: kBorder,
                                       thumbColor: kTextPrimary,
-                                      overlayColor:
-                                          accent.withValues(alpha: 0.15),
+                                      overlayColor: accent.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       trackHeight: 4,
                                       thumbShape: const RoundSliderThumbShape(
-                                          enabledThumbRadius: 8),
+                                        enabledThumbRadius: 8,
+                                      ),
                                     ),
                                     child: Slider(
                                       value: _usageLimitMinutes.toDouble(),
@@ -2052,27 +2165,35 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       max: 180,
                                       divisions: 35,
                                       onChanged: (v) {
-                                        setState(() =>
-                                            _usageLimitMinutes = v.toInt());
+                                        setState(
+                                          () => _usageLimitMinutes = v.toInt(),
+                                        );
                                       },
                                       onChangeEnd: (_) => _save(),
                                     ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
+                                      horizontal: 8,
+                                    ),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(S.current.sliderMin,
-                                            style: TextStyle(
-                                                color: kTextSecondary,
-                                                fontSize: 11)),
-                                        Text(S.current.sliderMax,
-                                            style: TextStyle(
-                                                color: kTextSecondary,
-                                                fontSize: 11)),
+                                        Text(
+                                          S.current.sliderMin,
+                                          style: TextStyle(
+                                            color: kTextSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          S.current.sliderMax,
+                                          style: TextStyle(
+                                            color: kTextSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -2101,10 +2222,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                       },
                     ),
                     if (_taskModeEnabled) ...[
-                      _TaskListSection(
-                        profile: p,
-                        accent: accent,
-                      ),
+                      _TaskListSection(profile: p, accent: accent),
                       const SizedBox(height: 16),
                     ],
 
@@ -2138,89 +2256,97 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         },
                       )
                     else
-                      Builder(builder: (_) {
-                        final canActivate = p.hasAppsSelected &&
-                            !(_taskModeEnabled && p.tasks.isEmpty) &&
-                            !_isActivating;
-                        final String buttonLabel;
-                        final IconData buttonIcon;
-                        final String? warningMsg;
+                      Builder(
+                        builder: (_) {
+                          final canActivate =
+                              p.hasAppsSelected &&
+                              !(_taskModeEnabled && p.tasks.isEmpty) &&
+                              !_isActivating;
+                          final String buttonLabel;
+                          final IconData buttonIcon;
+                          final String? warningMsg;
 
-                        if (_isActivating) {
-                          buttonLabel = S.current.activateShield;
-                          buttonIcon = Icons.shield_rounded;
-                          warningMsg = null;
-                        } else if (!p.hasAppsSelected) {
-                          buttonLabel = S.current.selectAppsToActivate;
-                          buttonIcon = Icons.apps_rounded;
-                          warningMsg = S.current.noAppsWarning;
-                        } else if (_taskModeEnabled && p.tasks.isEmpty) {
-                          buttonLabel = S.current.activateShield;
-                          buttonIcon = Icons.shield_rounded;
-                          warningMsg = S.current.noTasksWarning;
-                        } else {
-                          buttonLabel = S.current.activateShield;
-                          buttonIcon = Icons.shield_rounded;
-                          warningMsg = null;
-                        }
+                          if (_isActivating) {
+                            buttonLabel = S.current.activateShield;
+                            buttonIcon = Icons.shield_rounded;
+                            warningMsg = null;
+                          } else if (!p.hasAppsSelected) {
+                            buttonLabel = S.current.selectAppsToActivate;
+                            buttonIcon = Icons.apps_rounded;
+                            warningMsg = S.current.noAppsWarning;
+                          } else if (_taskModeEnabled && p.tasks.isEmpty) {
+                            buttonLabel = S.current.activateShield;
+                            buttonIcon = Icons.shield_rounded;
+                            warningMsg = S.current.noTasksWarning;
+                          } else {
+                            buttonLabel = S.current.activateShield;
+                            buttonIcon = Icons.shield_rounded;
+                            warningMsg = null;
+                          }
 
-                        return _FullWidthButton(
-                          label: _isActivating ? '…' : buttonLabel,
-                          icon: buttonIcon,
-                          color: canActivate ? kTextPrimary : kTextSecondary,
-                          bgColor: canActivate ? accent : kSurface,
-                          borderColor: canActivate ? null : kBorder,
-                          onPressed: canActivate
-                              ? () async {
-                                  HapticFeedback.heavyImpact();
-                                  setState(() => _isActivating = true);
-                                  try {
-                                    await ref
-                                        .read(profilesProvider.notifier)
-                                        .activateProfile(p.id);
-                                  } catch (_) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            S.current.errorGeneric(
-                                                'Activation failed'),
-                                            style:
-                                                TextStyle(color: kTextPrimary),
+                          return _FullWidthButton(
+                            label: _isActivating ? '…' : buttonLabel,
+                            icon: buttonIcon,
+                            color: canActivate ? kTextPrimary : kTextSecondary,
+                            bgColor: canActivate ? accent : kSurface,
+                            borderColor: canActivate ? null : kBorder,
+                            onPressed: canActivate
+                                ? () async {
+                                    HapticFeedback.heavyImpact();
+                                    setState(() => _isActivating = true);
+                                    try {
+                                      await ref
+                                          .read(profilesProvider.notifier)
+                                          .activateProfile(p.id);
+                                    } catch (_) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              S.current.errorGeneric(
+                                                'Activation failed',
+                                              ),
+                                              style: TextStyle(
+                                                color: kTextPrimary,
+                                              ),
+                                            ),
+                                            backgroundColor: kSurface,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
                                           ),
-                                          backgroundColor: kSurface,
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _isActivating = false);
+                                        );
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _isActivating = false);
+                                      }
                                     }
                                   }
-                                }
-                              : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        warningMsg!,
-                                        style: TextStyle(color: kTextPrimary),
+                                : () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          warningMsg!,
+                                          style: TextStyle(color: kTextPrimary),
+                                        ),
+                                        backgroundColor: kSurface,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                       ),
-                                      backgroundColor: kSurface,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                },
-                        );
-                      }),
+                                    );
+                                  },
+                          );
+                        },
+                      ),
 
                     const SizedBox(height: 32),
                   ],
@@ -2242,8 +2368,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           borderRadius: BorderRadius.circular(kRadius),
           side: BorderSide(color: kBorder),
         ),
-        title: Text(S.current.deleteProfile,
-            style: TextStyle(color: kTextPrimary)),
+        title: Text(
+          S.current.deleteProfile,
+          style: TextStyle(color: kTextPrimary),
+        ),
         content: Text(
           S.current.deleteProfileConfirm(widget.profile.name),
           style: TextStyle(color: kTextSecondary),
@@ -2251,8 +2379,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child:
-                Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
+            child: Text(
+              S.current.cancel,
+              style: TextStyle(color: kTextSecondary),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -2361,9 +2491,11 @@ class _RuleToggleCard extends StatelessWidget {
                       ),
                       if (locked) ...[
                         const SizedBox(width: 6),
-                        Icon(Icons.lock_rounded,
-                            size: 14,
-                            color: kTextSecondary.withValues(alpha: 0.6)),
+                        Icon(
+                          Icons.lock_rounded,
+                          size: 14,
+                          color: kTextSecondary.withValues(alpha: 0.6),
+                        ),
                       ],
                     ],
                   ),
@@ -2387,8 +2519,9 @@ class _RuleToggleCard extends StatelessWidget {
                 ),
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 250),
-                  alignment:
-                      enabled ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: enabled
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     width: 22,
                     height: 22,
@@ -2486,9 +2619,11 @@ class _FullWidthButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                size: 18,
-                color: enabled ? color : color.withValues(alpha: 0.5)),
+            Icon(
+              icon,
+              size: 18,
+              color: enabled ? color : color.withValues(alpha: 0.5),
+            ),
             const SizedBox(width: 8),
             Text(
               label,
@@ -2539,8 +2674,10 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
         borderRadius: BorderRadius.circular(kRadius),
         side: BorderSide(color: kBorder),
       ),
-      title: Text(S.current.setPinTitle,
-          style: TextStyle(color: kTextPrimary, fontSize: 18)),
+      title: Text(
+        S.current.setPinTitle,
+        style: TextStyle(color: kTextPrimary, fontSize: 18),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2550,11 +2687,19 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
             style: TextStyle(color: kTextSecondary, fontSize: 13),
           ),
           const SizedBox(height: 20),
-          _buildField(_pinController, S.current.enterPin, _obscurePin,
-              () => setState(() => _obscurePin = !_obscurePin)),
+          _buildField(
+            _pinController,
+            S.current.enterPin,
+            _obscurePin,
+            () => setState(() => _obscurePin = !_obscurePin),
+          ),
           const SizedBox(height: 12),
-          _buildField(_confirmController, S.current.confirmPin, _obscureConfirm,
-              () => setState(() => _obscureConfirm = !_obscureConfirm)),
+          _buildField(
+            _confirmController,
+            S.current.confirmPin,
+            _obscureConfirm,
+            () => setState(() => _obscureConfirm = !_obscureConfirm),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 8),
             Text(_error!, style: const TextStyle(color: kAccent, fontSize: 12)),
@@ -2577,15 +2722,21 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
             await widget.onSave(pin);
             if (context.mounted) Navigator.pop(context);
           },
-          child: Text(S.current.savePin,
-              style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
+          child: Text(
+            S.current.savePin,
+            style: TextStyle(color: kAccent, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildField(TextEditingController controller, String label,
-      bool obscure, VoidCallback onToggle) {
+  Widget _buildField(
+    TextEditingController controller,
+    String label,
+    bool obscure,
+    VoidCallback onToggle,
+  ) {
     return TextField(
       controller: controller,
       obscureText: obscure,
@@ -2609,8 +2760,11 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
           borderSide: const BorderSide(color: kAccent),
         ),
         suffixIcon: IconButton(
-          icon: Icon(obscure ? Icons.visibility_off : Icons.visibility,
-              color: kTextSecondary, size: 20),
+          icon: Icon(
+            obscure ? Icons.visibility_off : Icons.visibility,
+            color: kTextSecondary,
+            size: 20,
+          ),
           onPressed: onToggle,
         ),
       ),
@@ -2657,17 +2811,18 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   void initState() {
     super.initState();
     _checkPin();
-    _timer = Stream.periodic(
-      const Duration(seconds: 1),
-      (i) => _waitSeconds - 1 - i,
-    ).take(_waitSeconds).listen((remaining) {
-      if (mounted) {
-        setState(() => _secondsRemaining = remaining);
-        if (remaining <= 0) {
-          setState(() => _step = _DeactivateStep.enterPin);
-        }
-      }
-    });
+    _timer =
+        Stream.periodic(
+          const Duration(seconds: 1),
+          (i) => _waitSeconds - 1 - i,
+        ).take(_waitSeconds).listen((remaining) {
+          if (mounted) {
+            setState(() => _secondsRemaining = remaining);
+            if (remaining <= 0) {
+              setState(() => _step = _DeactivateStep.enterPin);
+            }
+          }
+        });
   }
 
   Future<void> _checkPin() async {
@@ -2700,23 +2855,25 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
         _step == _DeactivateStep.waiting
             ? S.current.coolingDown
             : _pinRequired
-                ? S.current.enterPinToDeactivate
-                : S.current.confirmDeactivation,
+            ? S.current.enterPinToDeactivate
+            : S.current.confirmDeactivation,
         style: TextStyle(color: kTextPrimary, fontSize: 18),
       ),
       content: _step == _DeactivateStep.waiting
           ? _buildWaiting()
           : _pinRequired
-              ? _buildPinEntry()
-              : Text(
-                  S.current.areYouSureDeactivate,
-                  style: TextStyle(color: kTextSecondary, fontSize: 14),
-                ),
+          ? _buildPinEntry()
+          : Text(
+              S.current.areYouSureDeactivate,
+              style: TextStyle(color: kTextSecondary, fontSize: 14),
+            ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child:
-              Text(S.current.cancel, style: TextStyle(color: kTextSecondary)),
+          child: Text(
+            S.current.cancel,
+            style: TextStyle(color: kTextSecondary),
+          ),
         ),
         if (_step == _DeactivateStep.enterPin)
           TextButton(
@@ -2726,8 +2883,10 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
                     Navigator.pop(context);
                     widget.onConfirm();
                   },
-            child: Text(S.current.deactivateAction,
-                style: TextStyle(color: kAccent, fontWeight: FontWeight.w600)),
+            child: Text(
+              S.current.deactivateAction,
+              style: TextStyle(color: kAccent, fontWeight: FontWeight.w600),
+            ),
           ),
       ],
     );
@@ -2900,8 +3059,10 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                 ),
                 if (tasks.isNotEmpty)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: doneCount == tasks.length
                           ? Colors.green.withValues(alpha: 0.15)
@@ -2939,67 +3100,76 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
             const SizedBox(height: 12),
 
             // Task items
-            ...tasks.map((task) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      // Checkbox
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          ref
-                              .read(profilesProvider.notifier)
-                              .toggleTask(widget.profile.id, task.id);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: task.isDone
-                                ? Colors.green.withValues(alpha: 0.2)
-                                : Colors.transparent,
-                            border: Border.all(
-                              color: task.isDone ? Colors.green : kBorder,
-                              width: 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
+            ...tasks.map(
+              (task) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    // Checkbox
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(profilesProvider.notifier)
+                            .toggleTask(widget.profile.id, task.id);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: task.isDone
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: task.isDone ? Colors.green : kBorder,
+                            width: 1.5,
                           ),
-                          child: task.isDone
-                              ? const Icon(Icons.check_rounded,
-                                  color: Colors.green, size: 16)
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: task.isDone
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: Colors.green,
+                                size: 16,
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Title
+                    Expanded(
+                      child: Text(
+                        task.title,
+                        style: TextStyle(
+                          color: task.isDone ? kTextSecondary : kTextPrimary,
+                          fontSize: 14,
+                          decoration: task.isDone
+                              ? TextDecoration.lineThrough
                               : null,
+                          decorationColor: kTextSecondary,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      // Title
-                      Expanded(
-                        child: Text(
-                          task.title,
-                          style: TextStyle(
-                            color: task.isDone ? kTextSecondary : kTextPrimary,
-                            fontSize: 14,
-                            decoration:
-                                task.isDone ? TextDecoration.lineThrough : null,
-                            decorationColor: kTextSecondary,
+                    ),
+                    // Delete button (only when shield is NOT active)
+                    if (!isActive)
+                      GestureDetector(
+                        onTap: () => ref
+                            .read(profilesProvider.notifier)
+                            .removeTask(widget.profile.id, task.id),
+                        child: Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: kTextSecondary,
+                            size: 18,
                           ),
                         ),
                       ),
-                      // Delete button (only when shield is NOT active)
-                      if (!isActive)
-                        GestureDetector(
-                          onTap: () => ref
-                              .read(profilesProvider.notifier)
-                              .removeTask(widget.profile.id, task.id),
-                          child: Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(Icons.close_rounded,
-                                color: kTextSecondary, size: 18),
-                          ),
-                        ),
-                    ],
-                  ),
-                )),
+                  ],
+                ),
+              ),
+            ),
 
             // Add-task row (only when shield is NOT active)
             if (!isActive) ...[
@@ -3012,13 +3182,17 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                       style: TextStyle(color: kTextPrimary, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: S.current.addTaskHint,
-                        hintStyle:
-                            TextStyle(color: kTextSecondary, fontSize: 14),
+                        hintStyle: TextStyle(
+                          color: kTextSecondary,
+                          fontSize: 14,
+                        ),
                         isDense: true,
                         filled: true,
                         fillColor: kBg,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(color: kBorder),
@@ -3045,8 +3219,11 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
                         color: widget.accent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.add_rounded,
-                          color: widget.accent, size: 20),
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: widget.accent,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -3058,15 +3235,19 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Icon(Icons.info_outline_rounded,
-                      color: kTextSecondary, size: 14),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: kTextSecondary,
+                    size: 14,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       doneCount == tasks.length
                           ? S.current.allTasksDoneNote
-                          : S.current
-                              .tasksRemainingNote(tasks.length - doneCount),
+                          : S.current.tasksRemainingNote(
+                              tasks.length - doneCount,
+                            ),
                       style: TextStyle(
                         color: kTextSecondary,
                         fontSize: 12,
@@ -3178,10 +3359,7 @@ class _ProfileUsageSection extends StatelessWidget {
             const SizedBox(height: 10),
             SizedBox(
               height: 80,
-              child: _WeekChart(
-                history: stats.weekHistory,
-                accent: accent,
-              ),
+              child: _WeekChart(history: stats.weekHistory, accent: accent),
             ),
             const SizedBox(height: 16),
 
@@ -3207,14 +3385,18 @@ class _ProfileUsageSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ...stats.appUsages.take(5).map((app) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _AppUsageRow(
-                    app: app,
-                    maxMinutes: stats.appUsages.first.todayMinutes,
-                    accent: accent,
+            ...stats.appUsages
+                .take(5)
+                .map(
+                  (app) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _AppUsageRow(
+                      app: app,
+                      maxMinutes: stats.appUsages.first.todayMinutes,
+                      accent: accent,
+                    ),
                   ),
-                )),
+                ),
             if (stats.appUsages.length > 5)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -3264,10 +3446,7 @@ class _MiniStat extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(color: kTextSecondary, fontSize: 10),
-          ),
+          Text(label, style: TextStyle(color: kTextSecondary, fontSize: 10)),
         ],
       ),
     );
@@ -3283,14 +3462,17 @@ class _WeekChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dayLabels = S.current.dayLabels;
-    final maxVal =
-        history.fold<int>(1, (m, d) => d.totalMinutes > m ? d.totalMinutes : m);
+    final maxVal = history.fold<int>(
+      1,
+      (m, d) => d.totalMinutes > m ? d.totalMinutes : m,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: history.map((day) {
         final fraction = day.totalMinutes / maxVal;
-        final isToday = day.date.day == DateTime.now().day &&
+        final isToday =
+            day.date.day == DateTime.now().day &&
             day.date.month == DateTime.now().month;
         final dayLabel = dayLabels[day.date.weekday - 1];
 

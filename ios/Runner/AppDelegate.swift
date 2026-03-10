@@ -34,7 +34,12 @@ import FamilyControls
     }
 
     private func showAppPicker(result: @escaping FlutterResult) {
-        guard let rootVC = window?.rootViewController else {
+        let rootVC: UIViewController? = window?.rootViewController
+            ?? UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap({ $0.windows })
+                .first(where: { $0.isKeyWindow })?.rootViewController
+        guard let rootVC else {
             result(FlutterError(code: "NO_ROOT_VC", message: nil, details: nil))
             return
         }
