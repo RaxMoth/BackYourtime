@@ -38,6 +38,8 @@ class FocusMonitor: DeviceActivityMonitor {
     }
 }
 
+// NOTE: Intentionally duplicated from ScreenTimeChannel.swift (Runner target).
+// These are separate compilation targets and cannot share code without a shared framework.
 extension ManagedSettingsStore.Name {
     static let unspend = Self("unspend")
 }

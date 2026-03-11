@@ -1454,4 +1454,48 @@ class _Hr extends S {
   @override
   String pinLockedOut(int seconds) =>
       'Previše pokušaja. Pokušaj za ${seconds}s';
+
+  @override
+  String get privacyPolicyTitle => 'Politika privatnosti';
+  @override
+  String get privacyPolicySubtitle => 'Kako se rukuje tvojim podacima';
+  @override
+  String get privacyPolicyBody =>
+      'Unspend pohranjuje sve podatke lokalno na tvom uređaju. Nikakvi osobni podaci se ne prikupljaju, prenose ili dijele s trećim stranama.\n\n'
+      'Tvoji profili blokiranja, postavke i PIN se pohranjuju pomoću lokalne pohrane (SharedPreferences i iOS Keychain). '
+      'Ne koriste se nikakve analitike, praćenje ili telemetrija.\n\n'
+      'Aplikacija koristi Appleov FamilyControls okvir za upravljanje blokiranjem aplikacija. Ti podaci ostaju na tvom uređaju i njima upravlja isključivo iOS.\n\n'
+      'Možeš obrisati sve podatke u bilo kojem trenutku iz Postavki > Obriši sve podatke.';
+
+  @override
+  String get deleteAllData => 'Obriši sve podatke';
+  @override
+  String get deleteAllDataSubtitle => 'Ukloni sve profile, PIN i postavke';
+  @override
+  String get deleteAllDataConfirm => 'Obriši sve';
+  @override
+  String get deleteAllDataWarning =>
+      'Ovo će trajno obrisati sve profile, tvoj PIN i sve postavke. Aktivni štitovi će biti uklonjeni. Ovo se ne može poništiti.';
+
+  @override
+  String get onboardingTitle1 => 'Preuzmi kontrolu nad vremenom';
+  @override
+  String get onboardingBody1 =>
+      'Unspend ti pomaže blokirati aplikacije koje odvlače pažnju na razini OS-a kako bi se mogao/la fokusirati na ono što je važno.';
+  @override
+  String get onboardingTitle2 => 'Izradi profile blokiranja';
+  @override
+  String get onboardingBody2 =>
+      'Postavi profile s kombinabilnim pravilima: vremenski rasporedi, dnevna ograničenja korištenja i otključavanje na temelju zadataka.';
+  @override
+  String get onboardingTitle3 => 'Zaštita koju ne možeš preskočiti';
+  @override
+  String get onboardingBody3 =>
+      'Štitove primjenjuje sam iOS. PIN i tajmer hlađenja sprječavaju impulzivno isključivanje.';
+  @override
+  String get getStarted => 'Počni';
+  @override
+  String get next => 'Dalje';
+  @override
+  String get skip => 'Preskoči';
 }

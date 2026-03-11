@@ -65,9 +65,12 @@ class ScreenTimeChannel {
     private func requestAuth(result: @escaping FlutterResult) async {
         do {
             try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
-            result(true)
+            // Explicitly dispatch to main thread — Flutter expects result callbacks on main.
+            DispatchQueue.main.async { result(true) }
         } catch {
-            result(FlutterError(code: "AUTH_FAILED", message: error.localizedDescription, details: nil))
+            DispatchQueue.main.async {
+                result(FlutterError(code: "AUTH_FAILED", message: error.localizedDescription, details: nil))
+            }
         }
     }
 
@@ -142,11 +145,16 @@ class ScreenTimeChannel {
     }
 }
 
-// MARK: - DeviceActivityName extension
+// MARK: - Shared constants
+// NOTE: ManagedSettingsStore.Name.unspend is intentionally duplicated in
+// DeviceActivityMonitorExtension.swift — these are separate compilation targets
+// and cannot share code without a shared framework.
 extension ManagedSettingsStore.Name {
     static let unspend = Self("unspend")
 }
 
+// NOTE: FocusMonitor extension references these activity names by raw string.
+// If you rename these, update DeviceActivityMonitorExtension.swift to match.
 extension DeviceActivityName {
     static let focusSchedule = Self("unspend.schedule")
     static let focusLimit    = Self("unspend.limit")

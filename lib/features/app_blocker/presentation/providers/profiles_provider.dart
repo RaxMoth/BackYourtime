@@ -65,7 +65,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   /// Create a new profile and return its ID.
   Future<String> createProfile({required String name}) async {
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final id =
+        '${DateTime.now().millisecondsSinceEpoch}_${Random.secure().nextInt(999999).toString().padLeft(6, '0')}';
     final profile = BlockerProfile(
       id: id,
       name: name,
@@ -236,7 +237,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   Future<void> addTask(String profileId, String title) async {
     final profile = _profiles.where((p) => p.id == profileId).firstOrNull;
     if (profile == null || profile.isActive) return;
-    final taskId = DateTime.now().microsecondsSinceEpoch.toString();
+    final taskId =
+        '${DateTime.now().microsecondsSinceEpoch}_${Random.secure().nextInt(999999).toString().padLeft(6, '0')}';
     final list = _profiles.map((p) {
       if (p.id != profileId) return p;
       return p.copyWith(
@@ -360,6 +362,50 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       debugPrint('[ProfilesNotifier] verifyPin failed: $e');
       return false;
     }
+  }
+
+  /// Re-checks the native shield status and deactivates any profile that the
+  /// OS cleared without Dart knowing (e.g. schedule end fired in extension).
+  Future<void> refreshShieldState() async {
+    try {
+      final isActive = await _ds.isShieldActive();
+      if (!isActive) {
+        final hasStale = _profiles.any((p) => p.isActive);
+        if (!hasStale) return;
+        final now = DateTime.now();
+        final list = _profiles.map((p) {
+          if (!p.isActive) return p;
+          int sessionMinutes = 0;
+          if (p.shieldActivatedAt != null) {
+            final activated = DateTime.tryParse(p.shieldActivatedAt!);
+            if (activated != null) {
+              sessionMinutes = now.difference(activated).inMinutes;
+            }
+          }
+          return p.copyWith(
+            isActive: false,
+            shieldActivatedAt: null,
+            totalSavedMinutes: p.totalSavedMinutes + sessionMinutes,
+          );
+        }).toList();
+        state = AsyncData(list);
+        await _persist(list);
+      }
+    } catch (e) {
+      debugPrint('[ProfilesNotifier] refreshShieldState failed: $e');
+    }
+  }
+
+  /// Delete all profiles, PIN, and preferences. Removes any active shield first.
+  Future<void> deleteAllData() async {
+    try {
+      await _ds.removeShield();
+      await _ds.stopMonitoring();
+    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await _secureStorage.deleteAll();
+    state = const AsyncData([]);
   }
 
   Future<bool> hasPinSet() async {
