@@ -4,7 +4,7 @@ import FamilyControls
 import Foundation
 
 class FocusMonitor: DeviceActivityMonitor {
-    private let store = ManagedSettingsStore()
+    private let store = ManagedSettingsStore(named: .unspend)
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     // Called when schedule interval STARTS → apply shield
@@ -18,6 +18,7 @@ class FocusMonitor: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
         store.shield.applications = nil
         store.shield.applicationCategories = nil
+        store.clearAllSettings()
         sharedDefaults.removeObject(forKey: "activeProfileName")
     }
 
@@ -35,4 +36,8 @@ class FocusMonitor: DeviceActivityMonitor {
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
     }
+}
+
+extension ManagedSettingsStore.Name {
+    static let unspend = Self("unspend")
 }

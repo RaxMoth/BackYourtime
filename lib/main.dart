@@ -1,3 +1,5 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,11 +13,18 @@ import 'package:unspend/shared/providers/theme_mode_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await S.init();
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+
+  // Global error handlers — prevent uncaught exceptions from crashing the app.
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('[FlutterError] ${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('[Unhandled] $error\n$stack');
+    return true;
+  };
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -34,7 +43,7 @@ class MyApp extends ConsumerWidget {
       builder: (context, child) {
         // Keep design-token getters in sync with the resolved brightness.
         updateTokenBrightness(Theme.of(context).brightness);
-        return child!;
+        return child ?? const SizedBox.shrink();
       },
       locale: Locale(langCode),
       supportedLocales: const [

@@ -44,7 +44,7 @@ import FamilyControls
             return
         }
         let pickerVC = AppPickerViewController()
-        pickerVC.onSelectionSaved = { result(true) }
+        pickerVC.onSelectionSaved = { count in result(count) }
         pickerVC.modalPresentationStyle = .formSheet
         rootVC.present(pickerVC, animated: true)
     }

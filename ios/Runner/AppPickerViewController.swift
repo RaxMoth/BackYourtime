@@ -4,17 +4,20 @@ import FamilyControls
 import Foundation
 
 class AppPickerViewController: UIViewController {
-    var onSelectionSaved: (() -> Void)?
+    var onSelectionSaved: ((Int) -> Void)?
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         let pickerView = AppPickerView(onSave: { [weak self] selection in
+            let count = selection.applicationTokens.count
+                + selection.categoryTokens.count
+                + selection.webDomainTokens.count
             if let data = try? JSONEncoder().encode(selection) {
                 self?.sharedDefaults.set(data, forKey: "blockedApps")
             }
             self?.dismiss(animated: true) {
-                self?.onSelectionSaved?()
+                self?.onSelectionSaved?(count)
             }
         }, onCancel: { [weak self] in
             self?.dismiss(animated: true)

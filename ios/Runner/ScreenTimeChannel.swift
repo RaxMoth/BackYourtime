@@ -6,7 +6,7 @@ import Foundation
 
 class ScreenTimeChannel {
     static let channelName = "com.maxroth.backyourtime/screentime"
-    private let store = ManagedSettingsStore()
+    private let store = ManagedSettingsStore(named: .unspend)
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
 
     func register(with registrar: FlutterPluginRegistrar) {
@@ -91,7 +91,10 @@ class ScreenTimeChannel {
     private func removeShield(result: FlutterResult) {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
+        store.clearAllSettings()
         sharedDefaults.removeObject(forKey: "activeProfileName")
+        sharedDefaults.removeObject(forKey: "blockedApps")
+        DeviceActivityCenter().stopMonitoring()
         result(true)
     }
 
@@ -140,6 +143,10 @@ class ScreenTimeChannel {
 }
 
 // MARK: - DeviceActivityName extension
+extension ManagedSettingsStore.Name {
+    static let unspend = Self("unspend")
+}
+
 extension DeviceActivityName {
     static let focusSchedule = Self("unspend.schedule")
     static let focusLimit    = Self("unspend.limit")

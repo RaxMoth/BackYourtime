@@ -10,8 +10,8 @@ const _kShieldDailyLog = 'shield_daily_log';
 /// Exposes a date → active-shield-count map for the contribution grid.
 final shieldActivityProvider =
     AsyncNotifierProvider<ShieldActivityNotifier, Map<String, int>>(
-  ShieldActivityNotifier.new,
-);
+      ShieldActivityNotifier.new,
+    );
 
 // ── Notifier ───────────────────────────────────────────────────────────────
 
@@ -22,7 +22,10 @@ class ShieldActivityNotifier extends AsyncNotifier<Map<String, int>> {
   /// Record today's active shield count (keeps the higher value per day).
   Future<void> record(int activeCount) async {
     final today = DateTime.now().toIso8601String().substring(0, 10);
-    final log = {...?state.valueOrNull};
+    // Ensure we have loaded data before merging, to avoid overwriting
+    // persisted entries when the initial build() hasn't resolved yet.
+    final current = state.valueOrNull ?? await _load();
+    final log = {...current};
     final prev = log[today] ?? 0;
     // Keep the peak value seen for the day.
     if (activeCount > prev) {

@@ -3,83 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/profiles_provider.dart';
-import '../providers/shield_activity_provider.dart';
 import '../../domain/entities/blocker_profile.dart';
-import '../../domain/entities/usage_stats.dart';
 import 'package:unspend/core/constants/strings.dart';
 import 'package:unspend/core/theme/design_tokens.dart';
 import 'package:unspend/shared/providers/locale_provider.dart';
 import 'package:unspend/shared/providers/theme_mode_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profilesAsync = ref.watch(profilesProvider);
-    // Watch theme so the scaffold rebuilds on theme change,
-    // and sync the global brightness *before* any kBg / kSurface calls.
-    ref.watch(themeModeProvider);
-    updateTokenBrightness(Theme.of(context).brightness);
-
-    return Scaffold(
-      backgroundColor: kBg,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: kAccent,
-        foregroundColor: kTextPrimary,
-        tooltip: S.current.newProfile,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        onPressed: () => _showCreateProfileSheet(context, ref),
-        child: const Icon(Icons.add_rounded, size: 28),
-      ),
-      body: SafeArea(
-        child: profilesAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: kAccent)),
-          error: (e, _) => Center(
-            child: Text(
-              S.current.errorGeneric(e),
-              style: const TextStyle(color: kAccent),
-            ),
-          ),
-          data: (profiles) => _DashboardBody(profiles: profiles),
-        ),
-      ),
-    );
-  }
-
   void _showCreateProfileSheet(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    var createdProfile = false;
     showModalBottomSheet(
       context: context,
-      backgroundColor: kSurface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(kRadius)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: kBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             Text(
               S.current.newProfile,
               style: TextStyle(
@@ -102,7 +51,7 @@ class DashboardScreen extends ConsumerWidget {
               decoration: InputDecoration(
                 hintText: S.current.profileNameHint,
                 hintStyle: TextStyle(
-                  color: kTextSecondary.withValues(alpha: 0.5),
+                  color: kTextSecondary.withAlpha(128),
                   fontSize: 15,
                 ),
                 filled: true,
@@ -120,28 +69,11 @@ class DashboardScreen extends ConsumerWidget {
                   borderSide: const BorderSide(color: kAccent),
                 ),
               ),
+              onSubmitted: (_) => _createProfile(ctx, ref, controller),
             ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () async {
-                final name = controller.text.trim();
-                if (name.isEmpty) return;
-                HapticFeedback.lightImpact();
-                createdProfile = true;
-                final id = await ref
-                    .read(profilesProvider.notifier)
-                    .createProfile(name: name);
-                controller.dispose();
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                  // Navigate to the profile detail
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => _ProfileDetailPageShell(profileId: id),
-                    ),
-                  );
-                }
-              },
+              onPressed: () => _createProfile(ctx, ref, controller),
               style: FilledButton.styleFrom(
                 backgroundColor: kAccent,
                 foregroundColor: kTextPrimary,
@@ -158,9 +90,56 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    ).whenComplete(() {
-      if (!createdProfile) controller.dispose();
-    });
+    );
+  }
+
+  void _createProfile(
+    BuildContext ctx,
+    WidgetRef ref,
+    TextEditingController controller,
+  ) async {
+    final name = controller.text.trim();
+    if (name.isEmpty) return;
+    HapticFeedback.lightImpact();
+    final id = await ref
+        .read(profilesProvider.notifier)
+        .createProfile(name: name);
+    if (ctx.mounted) {
+      Navigator.pop(ctx);
+      Navigator.of(ctx).push(
+        MaterialPageRoute(
+          builder: (_) => _ProfileDetailPageShell(profileId: id),
+        ),
+      );
+    }
+  }
+
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profilesAsync = ref.watch(profilesProvider);
+    // Watch theme so the scaffold rebuilds on theme change,
+    // and sync the global brightness *before* any kBg / kSurface calls.
+    ref.watch(themeModeProvider);
+    updateTokenBrightness(Theme.of(context).brightness);
+
+    return Scaffold(
+      backgroundColor: kBg,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: kAccent,
+        foregroundColor: kTextPrimary,
+        tooltip: S.current.newProfile,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        onPressed: () => _showCreateProfileSheet(context, ref),
+        child: const Icon(Icons.add_rounded, size: 28),
+      ),
+      body: profilesAsync.when(
+        data: (profiles) => SafeArea(child: _DashboardBody(profiles: profiles)),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('Error: $e')),
+      ),
+    );
   }
 }
 
@@ -216,10 +195,6 @@ class _DashboardBody extends ConsumerWidget {
                   totalProfiles: profiles.length,
                   activeCount: activeCount,
                 ),
-                const SizedBox(height: 14),
-
-                // ── Collapsible statistics ─────────────────────────────
-                _StatisticsSection(profiles: profiles),
                 const SizedBox(height: 20),
 
                 // ── Section title ──────────────────────────────────────
@@ -709,113 +684,6 @@ class _DashboardBody extends ConsumerWidget {
   }
 }
 
-// ── Collapsible Statistics Section ─────────────────────────────────────────
-class _StatisticsSection extends StatefulWidget {
-  final List<BlockerProfile> profiles;
-  const _StatisticsSection({required this.profiles});
-
-  @override
-  State<_StatisticsSection> createState() => _StatisticsSectionState();
-}
-
-class _StatisticsSectionState extends State<_StatisticsSection>
-    with SingleTickerProviderStateMixin {
-  bool _expanded = false;
-  late final AnimationController _animCtrl;
-  late final Animation<double> _expandAnim;
-  late final Animation<double> _rotateAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _animCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _expandAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
-    _rotateAnim = Tween<double>(begin: 0, end: 0.5).animate(_expandAnim);
-  }
-
-  @override
-  void dispose() {
-    _animCtrl.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() => _expanded = !_expanded);
-    if (_expanded) {
-      _animCtrl.forward();
-    } else {
-      _animCtrl.reverse();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(kRadius),
-        border: Border.all(color: kBorder),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // ── Header (always visible, tappable) ─────────────────────
-          GestureDetector(
-            onTap: _toggle,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(Icons.bar_chart_rounded, color: kAccent, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      S.current.statistics,
-                      style: TextStyle(
-                        color: kTextPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  RotationTransition(
-                    turns: _rotateAnim,
-                    child: Icon(
-                      Icons.expand_more_rounded,
-                      color: kTextSecondary,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Expandable body ───────────────────────────────────────
-          SizeTransition(
-            sizeFactor: _expandAnim,
-            axisAlignment: -1,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                children: [
-                  _StatsRow(profiles: widget.profiles),
-                  const SizedBox(height: 14),
-                  const _ShieldActivityGrid(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Summary Card ───────────────────────────────────────────────────────────
 class _SummaryCard extends StatelessWidget {
   final int totalProfiles;
@@ -910,358 +778,6 @@ class _SummaryCard extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// ── Stats Row (dashboard) ──────────────────────────────────────────────────
-class _StatsRow extends StatelessWidget {
-  final List<BlockerProfile> profiles;
-  const _StatsRow({required this.profiles});
-
-  String _fmtDuration(int totalMinutes) {
-    if (totalMinutes < 60) return '${totalMinutes}m';
-    final h = totalMinutes ~/ 60;
-    final m = totalMinutes % 60;
-    return m > 0 ? '${h}h ${m}m' : '${h}h';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Total saved minutes across all profiles (persisted + current session).
-    int totalSaved = 0;
-    int todayUsage = 0;
-    int weekAvg = 0;
-
-    for (final p in profiles) {
-      totalSaved += p.totalSavedMinutes;
-      // Add live session time for currently active profiles.
-      if (p.isActive && p.shieldActivatedAt != null) {
-        final activated = DateTime.tryParse(p.shieldActivatedAt!);
-        if (activated != null) {
-          totalSaved += DateTime.now().difference(activated).inMinutes;
-        }
-      }
-      // Mock usage stats.
-      if (p.hasAppsSelected) {
-        final stats = MockUsageGenerator.generate(
-          profileId: p.id,
-          appCount: p.appCount,
-          isActive: p.isActive,
-          shieldActivatedAt: p.shieldActivatedAt,
-        );
-        todayUsage += stats.todayTotalMinutes;
-        weekAvg += stats.weekAvgMinutes;
-      }
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: _StatTile(
-            icon: Icons.timer_off_rounded,
-            label: S.current.timeSaved,
-            value: _fmtDuration(totalSaved),
-            color: Colors.green,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            icon: Icons.phone_android_rounded,
-            label: S.current.today,
-            value: _fmtDuration(todayUsage),
-            color: kAccent,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatTile(
-            icon: Icons.show_chart_rounded,
-            label: S.current.dailyAvg,
-            value: _fmtDuration(weekAvg),
-            color: const Color(0xFF1E88E5),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-  const _StatTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: kTextPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: kTextSecondary, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Shield Activity Grid (GitHub-style) ────────────────────────────────────
-class _ShieldActivityGrid extends ConsumerStatefulWidget {
-  const _ShieldActivityGrid();
-
-  @override
-  ConsumerState<_ShieldActivityGrid> createState() =>
-      _ShieldActivityGridState();
-}
-
-class _ShieldActivityGridState extends ConsumerState<_ShieldActivityGrid> {
-  static const _weeks = 53; // full year
-  static const _cellSize = 13.0;
-  static const _cellGap = 3.0;
-  static const _dayLabelWidth = 28.0;
-
-  final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Jump to the right edge (today) after the first frame.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final asyncLog = ref.watch(shieldActivityProvider);
-    final log = asyncLog.valueOrNull ?? {};
-    final today = DateTime.now();
-
-    // Find the maximum shield count for intensity scaling.
-    final maxCount = log.values.fold<int>(0, (m, v) => v > m ? v : m);
-    final effectiveMax = maxCount > 0 ? maxCount : 1;
-
-    // Build a list of dates: we need _weeks * 7 days ending on today's week.
-    // Align to Monday-based weeks so rows = Mon…Sun.
-    final todayWeekday = today.weekday; // 1=Mon … 7=Sun
-    final endOfGrid = today;
-    final startOfGrid = endOfGrid.subtract(
-      Duration(days: (_weeks * 7) - 1 + (todayWeekday - 1)),
-    );
-
-    // Determine which months appear at the top of each column.
-    final monthHeaders = <int, String>{};
-    int? lastMonth;
-    for (int col = 0; col < _weeks; col++) {
-      final firstDayOfWeek = startOfGrid.add(Duration(days: col * 7));
-      if (firstDayOfWeek.month != lastMonth) {
-        monthHeaders[col] = S.current.monthLabels[firstDayOfWeek.month - 1];
-        lastMonth = firstDayOfWeek.month;
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Title row ─────────────────────────────────────────────
-        Row(
-          children: [
-            Icon(Icons.grid_view_rounded, color: kTextSecondary, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              S.current.shieldActivity,
-              style: TextStyle(
-                color: kTextSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-
-        // ── Scrollable grid area ──────────────────────────────────
-        SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Month labels row ────────────────────────────────
-              SizedBox(
-                height: 14,
-                child: Row(
-                  children: [
-                    SizedBox(width: _dayLabelWidth),
-                    ...List.generate(_weeks, (col) {
-                      final label = monthHeaders[col];
-                      return SizedBox(
-                        width: _cellSize + _cellGap,
-                        child: label != null
-                            ? Text(
-                                label,
-                                style: TextStyle(
-                                  color: kTextSecondary,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.visible,
-                                softWrap: false,
-                              )
-                            : const SizedBox.shrink(),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-
-              // ── Grid: 7 rows (Mon..Sun) × _weeks columns ───────
-              ...List.generate(7, (row) {
-                final dayLabel = S.current.dayLabels[row];
-                final showLabel = row == 0 || row == 2 || row == 4;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: row < 6 ? _cellGap : 0),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: _dayLabelWidth,
-                        child: showLabel
-                            ? Text(
-                                dayLabel,
-                                style: TextStyle(
-                                  color: kTextSecondary,
-                                  fontSize: 9,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      ...List.generate(_weeks, (col) {
-                        final date = startOfGrid.add(
-                          Duration(days: col * 7 + row),
-                        );
-                        final dateStr = date.toIso8601String().substring(0, 10);
-                        final count = log[dateStr] ?? 0;
-                        final isFuture = date.isAfter(today);
-
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: col < _weeks - 1 ? _cellGap : 0,
-                          ),
-                          child: Tooltip(
-                            message: isFuture
-                                ? ''
-                                : '${_fmtDate(date)}: ${S.current.shieldsOnDay(count)}',
-                            child: Container(
-                              width: _cellSize,
-                              height: _cellSize,
-                              decoration: BoxDecoration(
-                                color: isFuture
-                                    ? Colors.transparent
-                                    : _cellColor(count, effectiveMax),
-                                borderRadius: BorderRadius.circular(3),
-                                border: isFuture
-                                    ? null
-                                    : Border.all(
-                                        color: kBorder.withValues(alpha: 0.5),
-                                        width: 0.5,
-                                      ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // ── Legend ─────────────────────────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              S.current.less,
-              style: TextStyle(color: kTextSecondary, fontSize: 9),
-            ),
-            const SizedBox(width: 4),
-            ...List.generate(5, (i) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 2),
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: _cellColor(i, 4),
-                    borderRadius: BorderRadius.circular(2),
-                    border: Border.all(
-                      color: kBorder.withValues(alpha: 0.5),
-                      width: 0.5,
-                    ),
-                  ),
-                ),
-              );
-            }),
-            const SizedBox(width: 4),
-            Text(
-              S.current.more,
-              style: TextStyle(color: kTextSecondary, fontSize: 9),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Map a shield count to a color from transparent → kAccent.
-  Color _cellColor(int count, int max) {
-    if (count == 0) return kSurfaceHigh;
-    // 4 intensity levels.
-    final ratio = (count / max).clamp(0.0, 1.0);
-    if (ratio <= 0.25) return kAccent.withValues(alpha: 0.25);
-    if (ratio <= 0.50) return kAccent.withValues(alpha: 0.50);
-    if (ratio <= 0.75) return kAccent.withValues(alpha: 0.75);
-    return kAccent;
-  }
-
-  String _fmtDate(DateTime d) {
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 }
 
@@ -1889,9 +1405,27 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(kRadius),
                             onTap: () async {
-                              await ref
-                                  .read(profilesProvider.notifier)
-                                  .pickAppsForProfile(p.id);
+                              try {
+                                await ref
+                                    .read(profilesProvider.notifier)
+                                    .pickAppsForProfile(p.id);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      S.current.errorGeneric(e.toString()),
+                                      style: TextStyle(color: kTextPrimary),
+                                    ),
+                                    backgroundColor: kSurface,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
                               // Prompt PIN setup after first app selection
                               if (!context.mounted) return;
                               final notifier = ref.read(
@@ -1948,14 +1482,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // ── Usage Stats ─────────────────────────────────────
-                    if (p.hasAppsSelected) ...[
-                      _SectionLabel(S.current.sectionUsageStats),
-                      const SizedBox(height: 8),
-                      _ProfileUsageSection(profile: p, accent: accent),
-                      const SizedBox(height: 24),
-                    ],
 
                     // ── Block Rules (combinable) ────────────────────────
                     _SectionLabel(S.current.sectionBlockRules),
@@ -2327,7 +1853,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       }
                                     }
                                   }
-                                : () {
+                                : warningMsg != null
+                                ? () {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
@@ -2343,7 +1870,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                         ),
                                       ),
                                     );
-                                  },
+                                  }
+                                : null,
                           );
                         },
                       ),
@@ -2387,10 +1915,28 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref
-                  .read(profilesProvider.notifier)
-                  .deleteProfile(widget.profile.id);
-              if (context.mounted) Navigator.of(context).pop();
+              try {
+                await ref
+                    .read(profilesProvider.notifier)
+                    .deleteProfile(widget.profile.id);
+                if (context.mounted) Navigator.of(context).pop();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        S.current.errorGeneric(e.toString()),
+                        style: TextStyle(color: kTextPrimary),
+                      ),
+                      backgroundColor: kSurface,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
+              }
             },
             child: Text(S.current.delete, style: TextStyle(color: kAccent)),
           ),
@@ -2777,7 +2323,7 @@ class _PinSetupDialogState extends State<_PinSetupDialog> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _TimerThenPinDialog extends StatefulWidget {
-  final VoidCallback onConfirm;
+  final Future<void> Function() onConfirm;
   final Future<bool> Function(String pin) onVerifyPin;
   final Future<bool> Function() hasPinSet;
   const _TimerThenPinDialog({
@@ -2793,10 +2339,12 @@ class _TimerThenPinDialog extends StatefulWidget {
 enum _DeactivateStep { waiting, enterPin }
 
 class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
-  static const _waitSeconds = 5 * 60;
-  int _secondsRemaining = _waitSeconds;
-  late final StreamSubscription<int> _timer;
+  static const _waitSeconds = 300; // 5 minutes
+
   _DeactivateStep _step = _DeactivateStep.waiting;
+  int _remaining = _waitSeconds;
+  Timer? _timer;
+
   bool _pinRequired = true;
 
   final _pinController = TextEditingController();
@@ -2810,37 +2358,37 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
   @override
   void initState() {
     super.initState();
-    _checkPin();
-    _timer =
-        Stream.periodic(
-          const Duration(seconds: 1),
-          (i) => _waitSeconds - 1 - i,
-        ).take(_waitSeconds).listen((remaining) {
-          if (mounted) {
-            setState(() => _secondsRemaining = remaining);
-            if (remaining <= 0) {
-              setState(() => _step = _DeactivateStep.enterPin);
-            }
-          }
-        });
+    _startCountdown();
   }
 
-  Future<void> _checkPin() async {
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
+      setState(() => _remaining--);
+      if (_remaining <= 0) {
+        t.cancel();
+        _onTimerDone();
+      }
+    });
+  }
+
+  Future<void> _onTimerDone() async {
     final hasPin = await widget.hasPinSet();
-    if (mounted) setState(() => _pinRequired = hasPin);
+    if (!mounted) return;
+    setState(() {
+      _pinRequired = hasPin;
+      _step = _DeactivateStep.enterPin;
+    });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _pinController.dispose();
     super.dispose();
-  }
-
-  String get _formattedTime {
-    final m = _secondsRemaining ~/ 60;
-    final s = _secondsRemaining % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -2853,14 +2401,14 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
       ),
       title: Text(
         _step == _DeactivateStep.waiting
-            ? S.current.coolingDown
+            ? S.current.deactivateAction
             : _pinRequired
             ? S.current.enterPinToDeactivate
             : S.current.confirmDeactivation,
         style: TextStyle(color: kTextPrimary, fontSize: 18),
       ),
       content: _step == _DeactivateStep.waiting
-          ? _buildWaiting()
+          ? _buildCountdown()
           : _pinRequired
           ? _buildPinEntry()
           : Text(
@@ -2879,9 +2427,11 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
           TextButton(
             onPressed: _pinRequired
                 ? _verifyAndDeactivate
-                : () {
+                : () async {
                     Navigator.pop(context);
-                    widget.onConfirm();
+                    try {
+                      await widget.onConfirm();
+                    } catch (_) {}
                   },
             child: Text(
               S.current.deactivateAction,
@@ -2892,32 +2442,37 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     );
   }
 
-  Widget _buildWaiting() {
+  Widget _buildCountdown() {
+    final min = _remaining ~/ 60;
+    final sec = _remaining % 60;
+    final timeStr =
+        '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const SizedBox(height: 8),
         Text(
-          S.current.cooldownDescription,
-          style: TextStyle(color: kTextSecondary, fontSize: 13),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        Text(
-          _formattedTime,
-          style: const TextStyle(
+          timeStr,
+          style: TextStyle(
             color: kAccent,
-            fontSize: 48,
+            fontSize: 40,
             fontWeight: FontWeight.bold,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         const SizedBox(height: 12),
+        Text(
+          S.current.cooldownDescription,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: kTextSecondary, fontSize: 13),
+        ),
+        const SizedBox(height: 16),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: 1 - (_secondsRemaining / _waitSeconds),
-            backgroundColor: kBorder,
-            valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
+            value: 1 - (_remaining / _waitSeconds),
+            backgroundColor: kBg,
+            valueColor: const AlwaysStoppedAnimation(kAccent),
             minHeight: 4,
           ),
         ),
@@ -2989,7 +2544,9 @@ class _TimerThenPinDialogState extends State<_TimerThenPinDialog> {
     if (valid) {
       _failedAttempts = 0;
       if (mounted) Navigator.pop(context);
-      widget.onConfirm();
+      try {
+        await widget.onConfirm();
+      } catch (_) {}
     } else {
       _failedAttempts++;
       if (_failedAttempts >= 5) {
@@ -3270,310 +2827,6 @@ class _TaskListSectionState extends ConsumerState<_TaskListSection> {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ── Profile Usage Stats Section ────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _ProfileUsageSection extends StatelessWidget {
-  final BlockerProfile profile;
-  final Color accent;
-  const _ProfileUsageSection({required this.profile, required this.accent});
-
-  String _fmtMin(int m) {
-    if (m < 60) return '${m}m';
-    final h = m ~/ 60;
-    final r = m % 60;
-    return r > 0 ? '${h}h ${r}m' : '${h}h';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final stats = MockUsageGenerator.generate(
-      profileId: profile.id,
-      appCount: profile.appCount,
-      isActive: profile.isActive,
-      shieldActivatedAt: profile.shieldActivatedAt,
-    );
-
-    // Time saved for this profile.
-    int savedMinutes = profile.totalSavedMinutes;
-    if (profile.isActive && profile.shieldActivatedAt != null) {
-      final activated = DateTime.tryParse(profile.shieldActivatedAt!);
-      if (activated != null) {
-        savedMinutes += DateTime.now().difference(activated).inMinutes;
-      }
-    }
-
-    return _SectionCard(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Summary stat tiles ──────────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: _MiniStat(
-                    icon: Icons.phone_android_rounded,
-                    label: S.current.today,
-                    value: _fmtMin(stats.todayTotalMinutes),
-                    color: accent,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _MiniStat(
-                    icon: Icons.show_chart_rounded,
-                    label: S.current.dailyAvg,
-                    value: _fmtMin(stats.weekAvgMinutes),
-                    color: const Color(0xFF1E88E5),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _MiniStat(
-                    icon: Icons.timer_off_rounded,
-                    label: S.current.saved,
-                    value: _fmtMin(savedMinutes),
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // ── Weekly bar chart ────────────────────────────────────────
-            Text(
-              S.current.last7Days,
-              style: TextStyle(
-                color: kTextSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 80,
-              child: _WeekChart(history: stats.weekHistory, accent: accent),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Per-app breakdown ───────────────────────────────────────
-            Row(
-              children: [
-                Text(
-                  S.current.appBreakdown,
-                  style: TextStyle(
-                    color: kTextSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  S.current.today,
-                  style: TextStyle(
-                    color: kTextSecondary.withValues(alpha: 0.6),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...stats.appUsages
-                .take(5)
-                .map(
-                  (app) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _AppUsageRow(
-                      app: app,
-                      maxMinutes: stats.appUsages.first.todayMinutes,
-                      accent: accent,
-                    ),
-                  ),
-                ),
-            if (stats.appUsages.length > 5)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  S.current.moreApps(stats.appUsages.length - 5),
-                  style: TextStyle(color: kTextSecondary, fontSize: 12),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Mini stat tile (inside profile detail) ─────────────────────────────────
-class _MiniStat extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-  const _MiniStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-      decoration: BoxDecoration(
-        color: kBg,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              color: kTextPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: kTextSecondary, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Week bar chart ─────────────────────────────────────────────────────────
-class _WeekChart extends StatelessWidget {
-  final List<DailyUsage> history;
-  final Color accent;
-  const _WeekChart({required this.history, required this.accent});
-
-  @override
-  Widget build(BuildContext context) {
-    final dayLabels = S.current.dayLabels;
-    final maxVal = history.fold<int>(
-      1,
-      (m, d) => d.totalMinutes > m ? d.totalMinutes : m,
-    );
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: history.map((day) {
-        final fraction = day.totalMinutes / maxVal;
-        final isToday =
-            day.date.day == DateTime.now().day &&
-            day.date.month == DateTime.now().month;
-        final dayLabel = dayLabels[day.date.weekday - 1];
-
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Bar
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: (fraction * 50).clamp(4.0, 50.0),
-                  decoration: BoxDecoration(
-                    color: isToday ? accent : accent.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                // Day label
-                Text(
-                  dayLabel,
-                  style: TextStyle(
-                    color: isToday ? kTextPrimary : kTextSecondary,
-                    fontSize: 10,
-                    fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-// ── Per-app usage row ──────────────────────────────────────────────────────
-class _AppUsageRow extends StatelessWidget {
-  final AppUsage app;
-  final int maxMinutes;
-  final Color accent;
-  const _AppUsageRow({
-    required this.app,
-    required this.maxMinutes,
-    required this.accent,
-  });
-
-  String _fmtMin(int m) {
-    if (m < 60) return '${m}m';
-    final h = m ~/ 60;
-    final r = m % 60;
-    return r > 0 ? '${h}h ${r}m' : '${h}h';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fraction = maxMinutes > 0 ? app.todayMinutes / maxMinutes : 0.0;
-
-    return Row(
-      children: [
-        // App name
-        SizedBox(
-          width: 90,
-          child: Text(
-            app.appName,
-            style: TextStyle(color: kTextPrimary, fontSize: 13),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Progress bar
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: fraction,
-              backgroundColor: kBorder,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                accent.withValues(alpha: 0.6),
-              ),
-              minHeight: 6,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        // Duration
-        SizedBox(
-          width: 50,
-          child: Text(
-            _fmtMin(app.todayMinutes),
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              color: kTextSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
