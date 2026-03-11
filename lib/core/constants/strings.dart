@@ -183,6 +183,28 @@ abstract class S {
   String get enterYourPin;
   String get incorrectPin;
   String pinLockedOut(int seconds);
+
+  // ── Privacy Policy ──────────────────────────────────────────────────────
+  String get privacyPolicyTitle;
+  String get privacyPolicySubtitle;
+  String get privacyPolicyBody;
+
+  // ── Delete All Data ─────────────────────────────────────────────────────
+  String get deleteAllData;
+  String get deleteAllDataSubtitle;
+  String get deleteAllDataConfirm;
+  String get deleteAllDataWarning;
+
+  // ── Onboarding ──────────────────────────────────────────────────────────
+  String get onboardingTitle1;
+  String get onboardingBody1;
+  String get onboardingTitle2;
+  String get onboardingBody2;
+  String get onboardingTitle3;
+  String get onboardingBody3;
+  String get getStarted;
+  String get next;
+  String get skip;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -393,6 +415,50 @@ class _En extends S {
   @override
   String pinLockedOut(int seconds) =>
       'Too many attempts. Try again in ${seconds}s';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+  @override
+  String get privacyPolicySubtitle => 'How your data is handled';
+  @override
+  String get privacyPolicyBody =>
+      'Unspend stores all data locally on your device. No personal data is collected, transmitted, or shared with third parties.\n\n'
+      'Your blocking profiles, settings, and PIN are saved using on-device storage (SharedPreferences and iOS Keychain). '
+      'No analytics, tracking, or telemetry is used.\n\n'
+      'The app uses Apple\'s FamilyControls framework to manage app blocking. This data stays on your device and is managed entirely by iOS.\n\n'
+      'You can delete all your data at any time from Settings > Delete All Data.';
+
+  @override
+  String get deleteAllData => 'Delete All Data';
+  @override
+  String get deleteAllDataSubtitle => 'Remove all profiles, PIN, and settings';
+  @override
+  String get deleteAllDataConfirm => 'Delete Everything';
+  @override
+  String get deleteAllDataWarning =>
+      'This will permanently delete all profiles, your PIN, and all settings. Active shields will be removed. This cannot be undone.';
+
+  @override
+  String get onboardingTitle1 => 'Take Back Your Time';
+  @override
+  String get onboardingBody1 =>
+      'Unspend helps you block distracting apps at the OS level so you can focus on what matters.';
+  @override
+  String get onboardingTitle2 => 'Create Blocking Profiles';
+  @override
+  String get onboardingBody2 =>
+      'Set up profiles with combinable rules: time schedules, daily usage limits, and task-based unlocking.';
+  @override
+  String get onboardingTitle3 => 'Unskippable Protection';
+  @override
+  String get onboardingBody3 =>
+      'Shields are enforced by iOS itself. A PIN and cooldown timer prevent impulsive disabling.';
+  @override
+  String get getStarted => 'Get Started';
+  @override
+  String get next => 'Next';
+  @override
+  String get skip => 'Skip';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -607,6 +673,51 @@ class _De extends S {
   @override
   String pinLockedOut(int seconds) =>
       'Zu viele Versuche. Erneut in ${seconds}s';
+
+  @override
+  String get privacyPolicyTitle => 'Datenschutz';
+  @override
+  String get privacyPolicySubtitle => 'Wie deine Daten behandelt werden';
+  @override
+  String get privacyPolicyBody =>
+      'Unspend speichert alle Daten lokal auf deinem Gerät. Es werden keine personenbezogenen Daten erhoben, übermittelt oder an Dritte weitergegeben.\n\n'
+      'Deine Blockierprofile, Einstellungen und deine PIN werden im Gerätespeicher (SharedPreferences und iOS-Schlüsselbund) gesichert. '
+      'Es werden keine Analyse-, Tracking- oder Telemetriedienste verwendet.\n\n'
+      'Die App nutzt Apples FamilyControls-Framework zur App-Blockierung. Diese Daten verbleiben auf deinem Gerät und werden vollständig von iOS verwaltet.\n\n'
+      'Du kannst alle Daten jederzeit unter Einstellungen > Alle Daten löschen entfernen.';
+
+  @override
+  String get deleteAllData => 'Alle Daten löschen';
+  @override
+  String get deleteAllDataSubtitle =>
+      'Alle Profile, PIN und Einstellungen entfernen';
+  @override
+  String get deleteAllDataConfirm => 'Alles löschen';
+  @override
+  String get deleteAllDataWarning =>
+      'Alle Profile, deine PIN und sämtliche Einstellungen werden unwiderruflich gelöscht. Aktive Schilde werden entfernt.';
+
+  @override
+  String get onboardingTitle1 => 'Hol dir deine Zeit zurück';
+  @override
+  String get onboardingBody1 =>
+      'Unspend hilft dir, ablenkende Apps auf Systemebene zu blockieren, damit du dich auf das Wesentliche konzentrieren kannst.';
+  @override
+  String get onboardingTitle2 => 'Erstelle Blockierprofile';
+  @override
+  String get onboardingBody2 =>
+      'Richte Profile mit kombinierbaren Regeln ein: Zeitpläne, tägliche Nutzungslimits und aufgabenbasiertes Entsperren.';
+  @override
+  String get onboardingTitle3 => 'Unumgehbarer Schutz';
+  @override
+  String get onboardingBody3 =>
+      'Schilde werden von iOS selbst durchgesetzt. Eine PIN und ein Abkühl-Timer verhindern impulsives Deaktivieren.';
+  @override
+  String get getStarted => 'Los geht\'s';
+  @override
+  String get next => 'Weiter';
+  @override
+  String get skip => 'Überspringen';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -822,6 +933,51 @@ class _Es extends S {
   @override
   String pinLockedOut(int seconds) =>
       'Demasiados intentos. Inténtalo en ${seconds}s';
+
+  @override
+  String get privacyPolicyTitle => 'Política de privacidad';
+  @override
+  String get privacyPolicySubtitle => 'Cómo se manejan tus datos';
+  @override
+  String get privacyPolicyBody =>
+      'Unspend almacena todos los datos localmente en tu dispositivo. No se recopilan, transmiten ni comparten datos personales con terceros.\n\n'
+      'Tus perfiles de bloqueo, ajustes y PIN se guardan en el almacenamiento del dispositivo (SharedPreferences y el llavero de iOS). '
+      'No se utiliza ningún servicio de análisis, rastreo o telemetría.\n\n'
+      'La app usa el framework FamilyControls de Apple para gestionar el bloqueo de apps. Estos datos permanecen en tu dispositivo y son gestionados por iOS.\n\n'
+      'Puedes eliminar todos tus datos en cualquier momento desde Ajustes > Eliminar todos los datos.';
+
+  @override
+  String get deleteAllData => 'Eliminar todos los datos';
+  @override
+  String get deleteAllDataSubtitle =>
+      'Eliminar todos los perfiles, PIN y ajustes';
+  @override
+  String get deleteAllDataConfirm => 'Eliminar todo';
+  @override
+  String get deleteAllDataWarning =>
+      'Se eliminarán permanentemente todos los perfiles, tu PIN y todos los ajustes. Los escudos activos serán eliminados. Esta acción no se puede deshacer.';
+
+  @override
+  String get onboardingTitle1 => 'Recupera tu tiempo';
+  @override
+  String get onboardingBody1 =>
+      'Unspend te ayuda a bloquear apps distractoras a nivel del sistema para que puedas concentrarte en lo importante.';
+  @override
+  String get onboardingTitle2 => 'Crea perfiles de bloqueo';
+  @override
+  String get onboardingBody2 =>
+      'Configura perfiles con reglas combinables: horarios, límites de uso diario y desbloqueo basado en tareas.';
+  @override
+  String get onboardingTitle3 => 'Protección inquebrantable';
+  @override
+  String get onboardingBody3 =>
+      'Los escudos son aplicados por iOS mismo. Un PIN y un temporizador de espera previenen la desactivación impulsiva.';
+  @override
+  String get getStarted => 'Comenzar';
+  @override
+  String get next => 'Siguiente';
+  @override
+  String get skip => 'Omitir';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1039,6 +1195,51 @@ class _Fr extends S {
   @override
   String pinLockedOut(int seconds) =>
       'Trop de tentatives. Réessayez dans ${seconds}s';
+
+  @override
+  String get privacyPolicyTitle => 'Politique de confidentialité';
+  @override
+  String get privacyPolicySubtitle => 'Comment vos données sont traitées';
+  @override
+  String get privacyPolicyBody =>
+      'Unspend stocke toutes les données localement sur votre appareil. Aucune donnée personnelle n\'est collectée, transmise ou partagée avec des tiers.\n\n'
+      'Vos profils de blocage, paramètres et PIN sont enregistrés dans le stockage de l\'appareil (SharedPreferences et le trousseau iOS). '
+      'Aucun service d\'analyse, de suivi ou de télémétrie n\'est utilisé.\n\n'
+      'L\'application utilise le framework FamilyControls d\'Apple pour gérer le blocage des apps. Ces données restent sur votre appareil et sont gérées par iOS.\n\n'
+      'Vous pouvez supprimer toutes vos données à tout moment depuis Réglages > Supprimer toutes les données.';
+
+  @override
+  String get deleteAllData => 'Supprimer toutes les données';
+  @override
+  String get deleteAllDataSubtitle =>
+      'Supprimer tous les profils, le PIN et les réglages';
+  @override
+  String get deleteAllDataConfirm => 'Tout supprimer';
+  @override
+  String get deleteAllDataWarning =>
+      'Tous les profils, votre PIN et tous les réglages seront définitivement supprimés. Les boucliers actifs seront retirés. Cette action est irréversible.';
+
+  @override
+  String get onboardingTitle1 => 'Reprenez votre temps';
+  @override
+  String get onboardingBody1 =>
+      'Unspend vous aide à bloquer les apps distrayantes au niveau du système pour vous concentrer sur l\'essentiel.';
+  @override
+  String get onboardingTitle2 => 'Créez des profils de blocage';
+  @override
+  String get onboardingBody2 =>
+      'Configurez des profils avec des règles combinables : horaires, limites d\'utilisation quotidienne et déblocage par tâches.';
+  @override
+  String get onboardingTitle3 => 'Protection incontournable';
+  @override
+  String get onboardingBody3 =>
+      'Les boucliers sont appliqués par iOS lui-même. Un PIN et un minuteur de refroidissement empêchent la désactivation impulsive.';
+  @override
+  String get getStarted => 'Commencer';
+  @override
+  String get next => 'Suivant';
+  @override
+  String get skip => 'Passer';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
