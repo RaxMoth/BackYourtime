@@ -54,7 +54,7 @@ private struct AppPickerView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") { onSave(selection) }
-                        .disabled(selection.applicationTokens.isEmpty)
+                        .disabled(selection.applicationTokens.isEmpty && selection.categoryTokens.isEmpty && selection.webDomainTokens.isEmpty)
                 }
             }
         }
