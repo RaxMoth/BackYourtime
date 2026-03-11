@@ -16,7 +16,7 @@ class ScreenTimeDatasource {
 
   Future<bool> applyShield({String? profileName}) async =>
       await _channel.invokeMethod<bool>('applyShield', {
-        'profileName': profileName,
+        'profileName': ?profileName,
       }) ??
       false;
 

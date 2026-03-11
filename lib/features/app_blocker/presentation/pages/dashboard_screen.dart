@@ -15,27 +15,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen>
-    with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(profilesProvider.notifier).refreshShieldState();
-    }
-  }
-
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _showCreateProfileSheet(BuildContext context) {
     final controller = TextEditingController();
     showModalBottomSheet(
