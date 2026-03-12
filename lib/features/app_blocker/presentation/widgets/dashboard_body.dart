@@ -217,11 +217,12 @@ class DashboardBody extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: kSurface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(kRadius)),
       ),
       builder: (ctx) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
