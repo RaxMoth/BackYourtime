@@ -22,6 +22,9 @@
 		AA0002031111111100000002 /* FocusMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0002041111111100000002 /* FocusMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DF93ECE02F60899A00C8C873 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF93ECDF2F60899A00C8C873 /* ManagedSettings.framework */; };
 		DF93ECE82F60899A00C8C873 /* AppBlocker.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DF93ECDE2F60899A00C8C873 /* AppBlocker.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DFF5015F2FB3343E009CAE5D /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF93ECDF2F60899A00C8C873 /* ManagedSettings.framework */; };
+		DFF501612FB3343E009CAE5D /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFF501602FB3343E009CAE5D /* ManagedSettingsUI.framework */; };
+		DFF501692FB3343E009CAE5D /* ShieldConfigurationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFF5015E2FB3343E009CAE5D /* ShieldConfigurationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F74B91E8A11160F41F38DB21 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 922C4133BC2136F32D5925F9 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +50,13 @@
 			remoteGlobalIDString = DF93ECDD2F60899A00C8C873;
 			remoteInfo = AppBlocker;
 		};
+		DFF501672FB3343E009CAE5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFF5015D2FB3343E009CAE5D;
+			remoteInfo = ShieldConfigurationExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -67,6 +77,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				AA0002031111111100000002 /* FocusMonitor.appex in Embed Foundation Extensions */,
+				DFF501692FB3343E009CAE5D /* ShieldConfigurationExtension.appex in Embed Foundation Extensions */,
 				DF93ECE82F60899A00C8C873 /* AppBlocker.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
@@ -108,6 +119,8 @@
 		C790C4DD807431CC032D321E /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		DF93ECDE2F60899A00C8C873 /* AppBlocker.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AppBlocker.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF93ECDF2F60899A00C8C873 /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
+		DFF5015E2FB3343E009CAE5D /* ShieldConfigurationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShieldConfigurationExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFF501602FB3343E009CAE5D /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -117,6 +130,13 @@
 				Info.plist,
 			);
 			target = DF93ECDD2F60899A00C8C873 /* AppBlocker */;
+		};
+		DFF5016D2FB3343E009CAE5D /* Exceptions for "ShieldConfigurationExtension" folder in "ShieldConfigurationExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DFF5015D2FB3343E009CAE5D /* ShieldConfigurationExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -131,6 +151,18 @@
 			explicitFolders = (
 			);
 			path = AppBlocker;
+			sourceTree = "<group>";
+		};
+		DFF501622FB3343E009CAE5D /* ShieldConfigurationExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DFF5016D2FB3343E009CAE5D /* Exceptions for "ShieldConfigurationExtension" folder in "ShieldConfigurationExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = ShieldConfigurationExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -159,6 +191,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DFF5015B2FB3343E009CAE5D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DFF5015F2FB3343E009CAE5D /* ManagedSettings.framework in Frameworks */,
+				DFF501612FB3343E009CAE5D /* ManagedSettingsUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F6488809FB1783D3482C3014 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -176,6 +217,7 @@
 				922C4133BC2136F32D5925F9 /* Pods_Runner.framework */,
 				C0983506A4CC9CD0CFB0DEB1 /* Pods_RunnerTests.framework */,
 				DF93ECDF2F60899A00C8C873 /* ManagedSettings.framework */,
+				DFF501602FB3343E009CAE5D /* ManagedSettingsUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -206,6 +248,7 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				AA0006011111111100000006 /* FocusMonitor */,
 				DF93ECE12F60899A00C8C873 /* AppBlocker */,
+				DFF501622FB3343E009CAE5D /* ShieldConfigurationExtension */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				CEFD1BBE468458F35E28E267 /* Pods */,
@@ -220,6 +263,7 @@
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				AA0002041111111100000002 /* FocusMonitor.appex */,
 				DF93ECDE2F60899A00C8C873 /* AppBlocker.appex */,
+				DFF5015E2FB3343E009CAE5D /* ShieldConfigurationExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -307,6 +351,7 @@
 			dependencies = (
 				AA0003021111111100000003 /* PBXTargetDependency */,
 				DF93ECE72F60899A00C8C873 /* PBXTargetDependency */,
+				DFF501682FB3343E009CAE5D /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -349,6 +394,26 @@
 			productReference = DF93ECDE2F60899A00C8C873 /* AppBlocker.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		DFF5015D2FB3343E009CAE5D /* ShieldConfigurationExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFF5016E2FB3343E009CAE5D /* Build configuration list for PBXNativeTarget "ShieldConfigurationExtension" */;
+			buildPhases = (
+				DFF5015A2FB3343E009CAE5D /* Sources */,
+				DFF5015B2FB3343E009CAE5D /* Frameworks */,
+				DFF5015C2FB3343E009CAE5D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DFF501622FB3343E009CAE5D /* ShieldConfigurationExtension */,
+			);
+			name = ShieldConfigurationExtension;
+			productName = ShieldConfigurationExtension;
+			productReference = DFF5015E2FB3343E009CAE5D /* ShieldConfigurationExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -356,7 +421,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
@@ -373,6 +438,9 @@
 					};
 					DF93ECDD2F60899A00C8C873 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					DFF5015D2FB3343E009CAE5D = {
+						CreatedOnToolsVersion = 26.4;
 					};
 				};
 			};
@@ -393,6 +461,7 @@
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				AA0004011111111100000004 /* FocusMonitor */,
 				DF93ECDD2F60899A00C8C873 /* AppBlocker */,
+				DFF5015D2FB3343E009CAE5D /* ShieldConfigurationExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -417,6 +486,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		DF93ECDC2F60899A00C8C873 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DFF5015C2FB3343E009CAE5D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -556,6 +632,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DFF5015A2FB3343E009CAE5D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -573,6 +656,11 @@
 			isa = PBXTargetDependency;
 			target = DF93ECDD2F60899A00C8C873 /* AppBlocker */;
 			targetProxy = DF93ECE62F60899A00C8C873 /* PBXContainerItemProxy */;
+		};
+		DFF501682FB3343E009CAE5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFF5015D2FB3343E009CAE5D /* ShieldConfigurationExtension */;
+			targetProxy = DFF501672FB3343E009CAE5D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1118,6 +1206,132 @@
 			};
 			name = Profile;
 		};
+		DFF5016A2FB3343E009CAE5D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ShieldConfigurationExtension/ShieldConfigurationExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7DYCS4FJ2Y;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShieldConfigurationExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShieldConfigurationExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxroth.backyourtime.ShieldConfigurationExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DFF5016B2FB3343E009CAE5D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ShieldConfigurationExtension/ShieldConfigurationExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7DYCS4FJ2Y;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShieldConfigurationExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShieldConfigurationExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxroth.backyourtime.ShieldConfigurationExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		DFF5016C2FB3343E009CAE5D /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = ShieldConfigurationExtension/ShieldConfigurationExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7DYCS4FJ2Y;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShieldConfigurationExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ShieldConfigurationExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.maxroth.backyourtime.ShieldConfigurationExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1167,6 +1381,16 @@
 				DF93ECEB2F60899A00C8C873 /* Debug */,
 				DF93ECEC2F60899A00C8C873 /* Release */,
 				DF93ECED2F60899A00C8C873 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DFF5016E2FB3343E009CAE5D /* Build configuration list for PBXNativeTarget "ShieldConfigurationExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DFF5016A2FB3343E009CAE5D /* Debug */,
+				DFF5016B2FB3343E009CAE5D /* Release */,
+				DFF5016C2FB3343E009CAE5D /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

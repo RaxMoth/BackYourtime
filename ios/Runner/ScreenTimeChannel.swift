@@ -6,8 +6,11 @@ import Foundation
 
 class ScreenTimeChannel {
     static let channelName = "com.maxroth.backyourtime/screentime"
+    static let appGroupID = "group.com.maxroth.backyourtime"
     private let store = ManagedSettingsStore(named: .unspend)
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
+    // Optional — if the App Group entitlement is ever misconfigured, fail
+    // each call gracefully instead of crashing the whole Flutter engine.
+    private let sharedDefaults = UserDefaults(suiteName: ScreenTimeChannel.appGroupID)
 
     func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
@@ -52,9 +55,18 @@ class ScreenTimeChannel {
             DeviceActivityCenter().stopMonitoring()
             result(true)
 
+        case "cacheActiveProfileName":
+            if let args = call.arguments as? [String: Any],
+               let profileName = args["profileName"] as? String,
+               let defaults = sharedDefaults {
+                defaults.set(profileName, forKey: "activeProfileName")
+                result(true)
+            } else {
+                result(false)
+            }
+
         case "isShieldActive":
-            let active = store.shield.applications != nil && !store.shield.applications!.isEmpty
-            result(active)
+            result(store.shield.applications?.isEmpty == false)
 
         default:
             result(FlutterMethodNotImplemented)
@@ -75,7 +87,11 @@ class ScreenTimeChannel {
     }
 
     private func applyShield(call: FlutterMethodCall, result: FlutterResult) {
-        guard let data = sharedDefaults.data(forKey: "blockedApps"),
+        guard let defaults = sharedDefaults else {
+            result(FlutterError(code: "NO_APP_GROUP", message: "App Group entitlement missing", details: nil))
+            return
+        }
+        guard let data = defaults.data(forKey: "blockedApps"),
               let selection = try? JSONDecoder().decode(
                   FamilyActivitySelection.self, from: data) else {
             result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
@@ -84,7 +100,7 @@ class ScreenTimeChannel {
         // Store active profile name for ShieldConfigurationExtension
         if let args = call.arguments as? [String: Any],
            let profileName = args["profileName"] as? String {
-            sharedDefaults.set(profileName, forKey: "activeProfileName")
+            defaults.set(profileName, forKey: "activeProfileName")
         }
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
@@ -95,8 +111,12 @@ class ScreenTimeChannel {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
         store.clearAllSettings()
-        sharedDefaults.removeObject(forKey: "activeProfileName")
-        sharedDefaults.removeObject(forKey: "blockedApps")
+        sharedDefaults?.removeObject(forKey: "activeProfileName")
+        // NOTE: do NOT clear "blockedApps" here. That key holds the user's
+        // app SELECTION (written by the FamilyActivityPicker), not the
+        // currently-shielded set. We need it to survive deactivation so
+        // that toggleTask's auto re-shield, schedule starts, and usage
+        // threshold callbacks can all re-engage the same selection.
         DeviceActivityCenter().stopMonitoring()
         result(true)
     }
@@ -119,7 +139,11 @@ class ScreenTimeChannel {
     }
 
     private func startUsageLimit(minutes: Int, result: FlutterResult) {
-        guard let data = sharedDefaults.data(forKey: "blockedApps"),
+        guard let defaults = sharedDefaults else {
+            result(FlutterError(code: "NO_APP_GROUP", message: "App Group entitlement missing", details: nil))
+            return
+        }
+        guard let data = defaults.data(forKey: "blockedApps"),
               let selection = try? JSONDecoder().decode(
                   FamilyActivitySelection.self, from: data) else {
             result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
@@ -131,8 +155,14 @@ class ScreenTimeChannel {
             intervalEnd: DateComponents(hour: 23, minute: 59),
             repeats: true
         )
+        // Watch every token type the user picked — apps, categories, and
+        // web domains. Without categories/webDomains here, the threshold
+        // never fires for category-only selections (the most common case
+        // when users pick "Social" or "Games" from the system picker).
         let event = DeviceActivityEvent(
             applications: selection.applicationTokens,
+            categories: selection.categoryTokens,
+            webDomains: selection.webDomainTokens,
             threshold: DateComponents(minute: minutes)
         )
         do {

@@ -1,2 +1,9 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// Pin Runner's output to build/ios/iphoneos so `flutter build` /
+// `flutter run` find Runner.app at the path they expect, regardless of
+// what's in Generated.xcconfig (which Flutter rewrites). The Podfile's
+// post_install hook makes the Pods project use the same path so the
+// linker can still find Pods_Runner.framework.
+CONFIGURATION_BUILD_DIR = $(SRCROOT)/../build/ios/iphoneos

@@ -1,3 +1,7 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"
 #include "Generated.xcconfig"
+
+// Pin Runner's output to build/ios/iphoneos so `flutter build` finds
+// Runner.app where it expects. See Debug.xcconfig for the full rationale.
+CONFIGURATION_BUILD_DIR = $(SRCROOT)/../build/ios/iphoneos

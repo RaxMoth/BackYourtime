@@ -20,6 +20,16 @@ class ScreenTimeDatasource {
       }) ??
       false;
 
+  /// Stash the profile name in shared UserDefaults so when iOS fires the
+  /// shield from an extension callback, the ShieldConfigurationExtension
+  /// can still show "Blocked by &lt;profile&gt;" — even though the main app
+  /// hasn't called applyShield directly.
+  Future<bool> cacheActiveProfileName(String profileName) async =>
+      await _channel.invokeMethod<bool>('cacheActiveProfileName', {
+        'profileName': profileName,
+      }) ??
+      false;
+
   Future<bool> removeShield() async =>
       await _channel.invokeMethod<bool>('removeShield') ?? false;
 
@@ -37,14 +47,11 @@ class ScreenTimeDatasource {
       }) ??
       false;
 
-  Future<bool> startUsageLimit({required int minutes}) async {
-    // Always stop previous monitoring before starting a new usage limit
-    await stopMonitoring();
-    return await _channel.invokeMethod<bool>('startUsageLimit', {
-          'minutes': minutes,
-        }) ??
-        false;
-  }
+  Future<bool> startUsageLimit({required int minutes}) async =>
+      await _channel.invokeMethod<bool>('startUsageLimit', {
+        'minutes': minutes,
+      }) ??
+      false;
 
   Future<bool> stopMonitoring() async =>
       await _channel.invokeMethod<bool>('stopMonitoring') ?? false;

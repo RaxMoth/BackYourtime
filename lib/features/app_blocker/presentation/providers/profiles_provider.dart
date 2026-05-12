@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/screen_time_datasource.dart';
 import '../../domain/entities/blocker_profile.dart';
+import 'shield_activity_provider.dart';
 
 // ── Persistence keys ───────────────────────────────────────────────────────
 const _kProfilesKey = 'blocker_profiles_v3';
@@ -138,11 +139,34 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     if (profile == null || !profile.hasAppsSelected) return;
 
     try {
-      // Apply all enabled rules — they stack.
-      // 1) Always apply the immediate shield (manual base).
-      await _ds.applyShield(profileName: profile.name);
+      // Clear any prior monitoring once at the start — otherwise the
+      // schedule below could be wiped by usage-limit setup, or vice versa.
+      await _ds.stopMonitoring();
 
-      // 2) Schedule: hard-block during a time window.
+      // Apply the shield NOW only if the current rule state requires it:
+      //   • Manual only           → always block until user deactivates
+      //   • Schedule + in-window  → block right now; FocusMonitor will lift
+      //                             the shield when the window ends
+      //   • Task mode + pending   → block until tasks are completed
+      //   • Usage limit only      → start unblocked; the OS-side threshold
+      //                             event will engage the shield once the
+      //                             user has actually used the apps for the
+      //                             configured duration
+      final shouldShieldNow = profile.isManualOnly ||
+          (profile.scheduleEnabled && profile.isInsideScheduleWindow) ||
+          (profile.taskModeEnabled && !profile.allTasksDone);
+
+      if (shouldShieldNow) {
+        await _ds.applyShield(profileName: profile.name);
+      } else {
+        // Even when we don't shield immediately, the profile name needs to
+        // be available so the ShieldConfigurationExtension can show it
+        // once the shield does engage from a DeviceActivity event.
+        await _ds.cacheActiveProfileName(profile.name);
+      }
+
+      // Schedule: register the daily window with iOS so FocusMonitor's
+      // intervalDidStart / intervalDidEnd callbacks fire.
       if (profile.scheduleEnabled &&
           profile.scheduleStartHour != null &&
           profile.scheduleEndHour != null) {
@@ -154,7 +178,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
         );
       }
 
-      // 3) Usage limit: soft-block after daily budget.
+      // Usage limit: register the daily threshold event.
       if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
         await _ds.startUsageLimit(minutes: profile.usageLimitMinutes!);
       }
@@ -190,7 +214,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }).toList();
     state = AsyncData(list);
     await _persist(list);
-    // Record daily shield activity.
+
+    // Record peak active-shield count for today (drives the contribution grid).
+    final activeCount = list.where((p) => p.isActive).length;
+    await ref.read(shieldActivityProvider.notifier).record(activeCount);
   }
 
   Future<void> deactivateProfile(String id) async {

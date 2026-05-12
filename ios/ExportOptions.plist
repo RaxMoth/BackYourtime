@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      Export configuration used by `flutter build ipa` when producing
+      App Store builds. Keep this checked in so releases are reproducible.
+    -->
+    <key>method</key>
+    <string>app-store-connect</string>
+
+    <key>teamID</key>
+    <string>7DYCS4FJ2Y</string>
+
+    <!-- Let Xcode pick signing identities + provisioning profiles. Requires
+         App IDs + Distribution profiles to exist in Apple Developer portal. -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Upload dSYMs so App Store Connect can symbolicate crash reports. -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Strip Swift symbols from the shipping binary (smaller download). -->
+    <key>stripSwiftSymbols</key>
+    <true/>
+
+    <!-- Do NOT upload bitcode (deprecated by Apple since Xcode 14). -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Manage app version & build number manually in pubspec.yaml. -->
+    <key>manageAppVersionAndBuildNumber</key>
+    <false/>
+</dict>
+</plist>

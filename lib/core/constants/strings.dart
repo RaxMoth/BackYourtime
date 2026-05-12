@@ -68,6 +68,7 @@ abstract class S {
   // ── General ──────────────────────────────────────────────────────────────
   String get appName;
   String get cancel;
+  String get save;
   String get delete;
   String get create;
   String get untitled;
@@ -217,6 +218,8 @@ class _En extends S {
   String get appName => 'Unspend';
   @override
   String get cancel => 'Cancel';
+  @override
+  String get save => 'Save';
   @override
   String get delete => 'Delete';
   @override
@@ -471,6 +474,8 @@ class _De extends S {
   String get appName => 'Unspend';
   @override
   String get cancel => 'Abbrechen';
+  @override
+  String get save => 'Speichern';
   @override
   String get delete => 'Löschen';
   @override
@@ -731,6 +736,8 @@ class _Es extends S {
   @override
   String get cancel => 'Cancelar';
   @override
+  String get save => 'Guardar';
+  @override
   String get delete => 'Eliminar';
   @override
   String get create => 'Crear';
@@ -990,6 +997,8 @@ class _Fr extends S {
   String get appName => 'Unspend';
   @override
   String get cancel => 'Annuler';
+  @override
+  String get save => 'Enregistrer';
   @override
   String get delete => 'Supprimer';
   @override
@@ -1252,6 +1261,8 @@ class _Hr extends S {
   String get appName => 'Unspend';
   @override
   String get cancel => 'Odustani';
+  @override
+  String get save => 'Spremi';
   @override
   String get delete => 'Obriši';
   @override

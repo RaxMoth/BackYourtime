@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,6 +108,102 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   String _fmt(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  /// Format a duration in minutes as "Nm", "Nh", or "Nh Mm".
+  String _formatDuration(int totalMinutes) {
+    final h = totalMinutes ~/ 60;
+    final m = totalMinutes % 60;
+    if (h == 0) return '${m}m';
+    if (m == 0) return '${h}h';
+    return '${h}h ${m}m';
+  }
+
+  /// Show an iOS-style wheel picker for the daily usage limit (1 min – 23 h 59 m).
+  Future<void> _pickUsageLimit(Color accent) async {
+    Duration current = Duration(minutes: _usageLimitMinutes);
+    final result = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: kSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(sheetCtx).pop(),
+                        child: Text(
+                          S.current.cancel,
+                          style: TextStyle(color: kTextSecondary),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        S.current.dailyLimit,
+                        style: TextStyle(
+                          color: kTextPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          // Clamp to [1, 1439] minutes (max 23h 59m).
+                          final mins = current.inMinutes.clamp(1, 1439);
+                          Navigator.of(sheetCtx).pop(mins);
+                        },
+                        child: Text(
+                          S.current.save,
+                          style: TextStyle(
+                            color: accent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 220,
+                  child: CupertinoTheme(
+                    data: CupertinoThemeData(
+                      brightness: Theme.of(context).brightness,
+                      textTheme: CupertinoTextThemeData(
+                        dateTimePickerTextStyle: TextStyle(
+                          color: kTextPrimary,
+                          fontSize: 22,
+                        ),
+                      ),
+                    ),
+                    child: CupertinoTimerPicker(
+                      mode: CupertinoTimerPickerMode.hm,
+                      initialTimerDuration: current,
+                      minuteInterval: 1,
+                      onTimerDurationChanged: (d) => current = d,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (result != null && result != _usageLimitMinutes) {
+      setState(() => _usageLimitMinutes = result);
+      _save();
+    }
+  }
 
   void _debouncedSave() {
     _debounce?.cancel();
@@ -542,104 +639,54 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         child: Opacity(
                           opacity: locked ? 0.5 : 1.0,
                           child: SectionCard(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.timer_outlined,
-                                        color: accent,
-                                        size: 20,
+                            child: InkWell(
+                              onTap: () => _pickUsageLimit(accent),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.timer_outlined,
+                                      color: accent,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      S.current.dailyLimit,
+                                      style: TextStyle(
+                                        color: kTextPrimary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        S.current.dailyLimit,
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: accent.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _formatDuration(_usageLimitMinutes),
                                         style: TextStyle(
-                                          color: kTextPrimary,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
+                                          color: accent,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: kBorder,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '${_usageLimitMinutes}m',
-                                          style: TextStyle(
-                                            color: kTextPrimary,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  SliderTheme(
-                                    data: SliderThemeData(
-                                      activeTrackColor: accent,
-                                      inactiveTrackColor: kBorder,
-                                      thumbColor: kTextPrimary,
-                                      overlayColor: accent.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      trackHeight: 4,
-                                      thumbShape: const RoundSliderThumbShape(
-                                        enabledThumbRadius: 8,
-                                      ),
                                     ),
-                                    child: Slider(
-                                      value: _usageLimitMinutes.toDouble(),
-                                      min: 5,
-                                      max: 180,
-                                      divisions: 35,
-                                      onChanged: (v) {
-                                        setState(
-                                          () =>
-                                              _usageLimitMinutes = v.toInt(),
-                                        );
-                                      },
-                                      onChangeEnd: (_) => _save(),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: kTextSecondary,
+                                      size: 20,
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          S.current.sliderMin,
-                                          style: TextStyle(
-                                            color: kTextSecondary,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        Text(
-                                          S.current.sliderMax,
-                                          style: TextStyle(
-                                            color: kTextSecondary,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

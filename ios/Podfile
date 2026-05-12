@@ -39,5 +39,13 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Keep Pods aligned with Runner's CONFIGURATION_BUILD_DIR override in
+    # Flutter/Debug.xcconfig + Release.xcconfig. Without this Pods would
+    # build to ${BUILD_DIR}/Debug-iphoneos while Runner builds to
+    # build/ios/iphoneos, and the linker can't find Pods_Runner.framework.
+    target.build_configurations.each do |config|
+      config.build_settings['CONFIGURATION_BUILD_DIR'] = '$(BUILD_DIR)/iphoneos'
+    end
   end
 end
