@@ -128,7 +128,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         foregroundColor: kTextPrimary,
         tooltip: S.current.newProfile,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        onPressed: () => _showCreateProfileSheet(context),
+        onPressed: () {
+          HapticFeedback.selectionClick();
+          _showCreateProfileSheet(context);
+        },
         child: const Icon(Icons.add_rounded, size: 28),
       ),
       body: profilesAsync.when(

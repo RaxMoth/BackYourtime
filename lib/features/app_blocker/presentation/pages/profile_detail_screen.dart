@@ -118,88 +118,25 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     return '${h}h ${m}m';
   }
 
-  /// Show an iOS-style wheel picker for the daily usage limit (1 min – 23 h 59 m).
+  /// Show a duration picker for the daily usage limit (1 min – 23 h 59 m).
+  /// Offers a segmented switch between an iOS-style wheel and a direct
+  /// numeric keypad — users have strong preferences either way.
   Future<void> _pickUsageLimit(Color accent) async {
-    Duration current = Duration(minutes: _usageLimitMinutes);
     final result = await showModalBottomSheet<int>(
       context: context,
       backgroundColor: kSurface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetCtx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                  child: Row(
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(sheetCtx).pop(),
-                        child: Text(
-                          S.current.cancel,
-                          style: TextStyle(color: kTextSecondary),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        S.current.dailyLimit,
-                        style: TextStyle(
-                          color: kTextPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          // Clamp to [1, 1439] minutes (max 23h 59m).
-                          final mins = current.inMinutes.clamp(1, 1439);
-                          Navigator.of(sheetCtx).pop(mins);
-                        },
-                        child: Text(
-                          S.current.save,
-                          style: TextStyle(
-                            color: accent,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 220,
-                  child: CupertinoTheme(
-                    data: CupertinoThemeData(
-                      brightness: Theme.of(context).brightness,
-                      textTheme: CupertinoTextThemeData(
-                        dateTimePickerTextStyle: TextStyle(
-                          color: kTextPrimary,
-                          fontSize: 22,
-                        ),
-                      ),
-                    ),
-                    child: CupertinoTimerPicker(
-                      mode: CupertinoTimerPickerMode.hm,
-                      initialTimerDuration: current,
-                      minuteInterval: 1,
-                      onTimerDurationChanged: (d) => current = d,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (sheetCtx) => _UsageLimitPickerSheet(
+        initialMinutes: _usageLimitMinutes,
+        accent: accent,
+      ),
     );
 
     if (result != null && result != _usageLimitMinutes) {
+      HapticFeedback.lightImpact();
       setState(() => _usageLimitMinutes = result);
       _save();
     }
@@ -208,6 +145,47 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   void _debouncedSave() {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), _save);
+  }
+
+  /// Launch the system FamilyActivityPicker for this profile. Prompts the
+  /// user to set a PIN afterwards if none is set yet.
+  Future<void> _onSelectAppsTapped(
+    BuildContext context,
+    WidgetRef ref,
+    BlockerProfile profile,
+  ) async {
+    HapticFeedback.selectionClick();
+    final notifier = ref.read(profilesProvider.notifier);
+    try {
+      await notifier.pickAppsForProfile(profile.id);
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            S.current.errorGeneric(e.toString()),
+            style: TextStyle(color: kTextPrimary),
+          ),
+          backgroundColor: kSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    final hasPin = await notifier.hasPinSet();
+    if (!context.mounted) return;
+    if (!hasPin) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) =>
+            PinSetupDialog(onSave: (pin) => notifier.savePin(pin)),
+      );
+    }
   }
 
   Future<void> _save() async {
@@ -415,81 +393,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                       ignoring: locked,
                       child: Opacity(
                         opacity: locked ? 0.5 : 1.0,
-                        child: SectionCard(
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(kRadius),
-                            onTap: () async {
-                              try {
-                                await ref
-                                    .read(profilesProvider.notifier)
-                                    .pickAppsForProfile(p.id);
-                              } catch (e) {
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      S.current.errorGeneric(e.toString()),
-                                      style: TextStyle(color: kTextPrimary),
-                                    ),
-                                    backgroundColor: kSurface,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
-                              if (!context.mounted) return;
-                              final notifier =
-                                  ref.read(profilesProvider.notifier);
-                              final hasPin = await notifier.hasPinSet();
-                              if (!context.mounted) return;
-                              if (!hasPin) {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (_) => PinSetupDialog(
-                                    onSave: (pin) => notifier.savePin(pin),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.apps_rounded,
-                                    color: accent,
-                                    size: 22,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    p.hasAppsSelected
-                                        ? S.current.appsSelected(p.appCount)
-                                        : S.current.selectAppsToBlock,
-                                    style: TextStyle(
-                                      color: p.hasAppsSelected
-                                          ? kTextPrimary
-                                          : kTextSecondary,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: kTextSecondary,
-                                    size: 22,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                        child: _AppSelectionCard(
+                          profile: p,
+                          accent: accent,
+                          onTap: () => _onSelectAppsTapped(context, ref, p),
                         ),
                       ),
                     ),
@@ -904,6 +811,418 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             child: Text(S.current.delete, style: const TextStyle(color: kAccent)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Usage Limit Picker Sheet ────────────────────────────────────────────────
+/// Two-mode duration picker.
+///
+/// • **Wheel mode** uses `CupertinoTimerPicker` — fast scrubbing, familiar
+///   to anyone who's used Apple's Clock app.
+/// • **Keypad mode** lets users type hours/minutes directly — needed when
+///   the wheel feels imprecise (e.g. setting "13 minutes" exactly).
+///
+/// We default to whichever the user picked last (cached in
+/// `_lastUsedMode`). Range is 1 min – 23 h 59 m.
+class _UsageLimitPickerSheet extends StatefulWidget {
+  final int initialMinutes;
+  final Color accent;
+
+  const _UsageLimitPickerSheet({
+    required this.initialMinutes,
+    required this.accent,
+  });
+
+  @override
+  State<_UsageLimitPickerSheet> createState() => _UsageLimitPickerSheetState();
+}
+
+class _UsageLimitPickerSheetState extends State<_UsageLimitPickerSheet> {
+  static _PickerMode _lastUsedMode = _PickerMode.wheel;
+
+  late _PickerMode _mode;
+  late int _currentMinutes;
+  late final TextEditingController _hCtrl;
+  late final TextEditingController _mCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _mode = _lastUsedMode;
+    _currentMinutes = widget.initialMinutes.clamp(1, 1439);
+    _hCtrl = TextEditingController(text: (_currentMinutes ~/ 60).toString());
+    _mCtrl = TextEditingController(text: (_currentMinutes % 60).toString());
+  }
+
+  @override
+  void dispose() {
+    _hCtrl.dispose();
+    _mCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSave() {
+    if (_mode == _PickerMode.keypad) {
+      final h = int.tryParse(_hCtrl.text.trim()) ?? 0;
+      final m = int.tryParse(_mCtrl.text.trim()) ?? 0;
+      _currentMinutes = (h * 60 + m).clamp(1, 1439);
+    }
+    HapticFeedback.lightImpact();
+    Navigator.of(context).pop(_currentMinutes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+
+            // ── Header (Cancel / title / Save) ────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      S.current.cancel,
+                      style: TextStyle(color: kTextSecondary),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    S.current.dailyLimit,
+                    style: TextStyle(
+                      color: kTextPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _onSave,
+                    child: Text(
+                      S.current.save,
+                      style: TextStyle(
+                        color: widget.accent,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Mode switch (wheel ↔ keypad) ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: CupertinoSlidingSegmentedControl<_PickerMode>(
+                groupValue: _mode,
+                backgroundColor: kBorder,
+                thumbColor: widget.accent,
+                onValueChanged: (m) {
+                  if (m == null) return;
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _mode = m;
+                    _lastUsedMode = m;
+                  });
+                },
+                children: {
+                  _PickerMode.wheel: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      S.current.pickerModeWheel,
+                      style: TextStyle(
+                        color: _mode == _PickerMode.wheel
+                            ? Colors.white
+                            : kTextPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  _PickerMode.keypad: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      S.current.pickerModeKeypad,
+                      style: TextStyle(
+                        color: _mode == _PickerMode.keypad
+                            ? Colors.white
+                            : kTextPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── Body (wheel or keypad) ────────────────────────────────────
+            if (_mode == _PickerMode.wheel)
+              SizedBox(
+                height: 220,
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    brightness: Theme.of(context).brightness,
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(
+                        color: kTextPrimary,
+                        fontSize: 22,
+                      ),
+                    ),
+                  ),
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm,
+                    initialTimerDuration:
+                        Duration(minutes: _currentMinutes),
+                    minuteInterval: 1,
+                    onTimerDurationChanged: (d) {
+                      _currentMinutes = d.inMinutes.clamp(1, 1439);
+                    },
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _NumericInput(
+                      controller: _hCtrl,
+                      label: S.current.hoursShort,
+                      max: 23,
+                      accent: widget.accent,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      ':',
+                      style: TextStyle(
+                        color: kTextPrimary,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    _NumericInput(
+                      controller: _mCtrl,
+                      label: S.current.minutesShort,
+                      max: 59,
+                      accent: widget.accent,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _PickerMode { wheel, keypad }
+
+class _NumericInput extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final int max;
+  final Color accent;
+
+  const _NumericInput({
+    required this.controller,
+    required this.label,
+    required this.max,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 90,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 2,
+            style: TextStyle(
+              color: kTextPrimary,
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              // Clamp on input — paste of "99" snaps to 23 or 59.
+              _MaxIntFormatter(max),
+            ],
+            decoration: InputDecoration(
+              counterText: '',
+              filled: true,
+              fillColor: kBg,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: kBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: kBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: accent, width: 2),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: kTextSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// TextInputFormatter that caps numeric input at [max].
+class _MaxIntFormatter extends TextInputFormatter {
+  final int max;
+  _MaxIntFormatter(this.max);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+    final n = int.tryParse(newValue.text);
+    if (n == null) return oldValue;
+    if (n > max) {
+      final clamped = max.toString();
+      return TextEditingValue(
+        text: clamped,
+        selection: TextSelection.collapsed(offset: clamped.length),
+      );
+    }
+    return newValue;
+  }
+}
+
+// ── App Selection Card ──────────────────────────────────────────────────────
+/// Highly visible card showing how many apps are picked for THIS profile.
+///
+/// Apple keeps app names opaque (FamilyActivityToken is unreadable outside
+/// the picker / shield UI), so we can't list "Safari, Mail" by name. We
+/// can however make the count + edit hint loud enough that users always
+/// understand what's in this profile without spelunking.
+class _AppSelectionCard extends StatelessWidget {
+  final BlockerProfile profile;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _AppSelectionCard({
+    required this.profile,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = !profile.hasAppsSelected;
+    final emphasis = empty ? accent : accent;
+    final bg = empty
+        ? accent.withValues(alpha: 0.06)
+        : accent.withValues(alpha: 0.10);
+    final border = empty
+        ? accent.withValues(alpha: 0.45)
+        : accent.withValues(alpha: 0.30);
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(kRadius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(kRadius),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(kRadius),
+            border: Border.all(color: border, width: 1.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              // Leading icon disc with the profile's accent.
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: emphasis.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  empty ? Icons.add_rounded : Icons.apps_rounded,
+                  color: emphasis,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Headline + helper text.
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      empty
+                          ? S.current.selectAppsToBlock
+                          : S.current.appsSelected(profile.appCount),
+                      style: TextStyle(
+                        color: kTextPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      empty
+                          ? S.current.tapToChooseApps
+                          : S.current.tapToEditSelection,
+                      style: TextStyle(
+                        color: kTextSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                empty ? Icons.add_circle_rounded : Icons.edit_rounded,
+                color: emphasis,
+                size: 22,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

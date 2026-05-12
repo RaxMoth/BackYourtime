@@ -110,8 +110,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     if (profile == null) return;
     if (profile.isActive) {
       try {
-        await _ds.removeShield();
-        await _ds.stopMonitoring();
+        await _ds.removeShield(profileId: id);
       } catch (e) {
         debugPrint('[ProfilesNotifier] Shield removal on delete failed: $e');
       }
@@ -139,9 +138,9 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     if (profile == null || !profile.hasAppsSelected) return;
 
     try {
-      // Clear any prior monitoring once at the start — otherwise the
-      // schedule below could be wiped by usage-limit setup, or vice versa.
-      await _ds.stopMonitoring();
+      // Clear THIS profile's prior monitoring sessions (if any). Don't
+      // touch other profiles — they keep their schedules and limits.
+      await _ds.stopMonitoring(profileId: profile.id);
 
       // Apply the shield NOW only if the current rule state requires it:
       //   • Manual only           → always block until user deactivates
@@ -156,48 +155,41 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
           (profile.scheduleEnabled && profile.isInsideScheduleWindow) ||
           (profile.taskModeEnabled && !profile.allTasksDone);
 
-      if (shouldShieldNow) {
-        await _ds.applyShield(
-          profileId: profile.id,
-          profileName: profile.name,
-        );
-      } else {
-        // Even when we don't shield immediately, both pointers need to be
-        // available so DeviceActivityMonitor can resolve the right
-        // selection — and ShieldConfigurationExtension can show the name —
-        // once the shield engages from a DeviceActivity event.
-        await _ds.cacheActiveProfile(
-          profileId: profile.id,
-          profileName: profile.name,
-        );
-      }
+      // Apply the immediate shield (or cache pointers) FIRST so the user
+      // sees the visual state change without waiting on the monitoring
+      // registration. Schedule + usage-limit registration can race in
+      // parallel — they touch different DeviceActivityName slots.
+      final shieldCall = shouldShieldNow
+          ? _ds.applyShield(profileId: profile.id, profileName: profile.name)
+          : _ds.cacheActiveProfile(
+              profileId: profile.id,
+              profileName: profile.name,
+            );
 
-      // Schedule: register the daily window with iOS so FocusMonitor's
-      // intervalDidStart / intervalDidEnd callbacks fire.
+      final monitorCalls = <Future<bool>>[];
       if (profile.scheduleEnabled &&
           profile.scheduleStartHour != null &&
           profile.scheduleEndHour != null) {
-        await _ds.startSchedule(
+        monitorCalls.add(_ds.startSchedule(
           profileId: profile.id,
           startHour: profile.scheduleStartHour!,
           startMinute: profile.scheduleStartMinute ?? 0,
           endHour: profile.scheduleEndHour!,
           endMinute: profile.scheduleEndMinute ?? 0,
-        );
+        ));
       }
-
-      // Usage limit: register the daily threshold event.
       if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
-        await _ds.startUsageLimit(
+        monitorCalls.add(_ds.startUsageLimit(
           profileId: profile.id,
           minutes: profile.usageLimitMinutes!,
-        );
+        ));
       }
+
+      await Future.wait<Object>([shieldCall, ...monitorCalls]);
     } catch (e) {
-      // Roll back – attempt to remove any partially-applied shield.
+      // Roll back — clear this profile's partial shield + monitoring.
       try {
-        await _ds.removeShield();
-        await _ds.stopMonitoring();
+        await _ds.removeShield(profileId: profile.id);
       } catch (_) {}
       // Re-throw so the UI can react (e.g. show a snackbar).
       rethrow;
@@ -233,24 +225,27 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   Future<void> deactivateProfile(String id) async {
     try {
-      await _ds.removeShield();
-      await _ds.stopMonitoring();
+      // Per-profile shield + monitoring — leaves other profiles alone.
+      await _ds.removeShield(profileId: id);
     } catch (e) {
       debugPrint('[ProfilesNotifier] Shield removal failed: $e');
       // Continue — still mark profile inactive so user isn't stuck.
     }
+    final now = DateTime.now();
     final list = _profiles.map((p) {
       if (p.id != id) return p;
-      // Accumulate saved minutes from this session.
+      // Accumulate saved minutes from this session — clamp to ≥0 so a
+      // backwards clock change can't subtract from totalSavedMinutes.
       int sessionMinutes = 0;
       if (p.shieldActivatedAt != null) {
         final activated = DateTime.tryParse(p.shieldActivatedAt!);
         if (activated != null) {
-          sessionMinutes = DateTime.now().difference(activated).inMinutes;
+          sessionMinutes = now.difference(activated).inMinutes.clamp(0, 1 << 30);
         }
       }
       return p.copyWith(
         isActive: false,
+        shieldActivatedAt: null,
         totalSavedMinutes: p.totalSavedMinutes + sessionMinutes,
       );
     }).toList();
@@ -338,7 +333,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     if (updatedProfile.isActive && updatedProfile.taskModeEnabled) {
       try {
         if (updatedProfile.allTasksDone) {
-          await _ds.removeShield();
+          await _ds.removeShield(profileId: updatedProfile.id);
         } else {
           await _ds.applyShield(
             profileId: updatedProfile.id,
@@ -405,42 +400,59 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
     }
   }
 
-  /// Re-checks the native shield status and deactivates any profile that the
-  /// OS cleared without Dart knowing (e.g. schedule end fired in extension).
+  /// Re-checks the native shield status for each marked-active profile and
+  /// deactivates any whose OS shield has been cleared without Dart knowing
+  /// (e.g. a schedule's end-of-window fired in the extension).
   Future<void> refreshShieldState() async {
     try {
-      final isActive = await _ds.isShieldActive();
-      if (!isActive) {
-        final hasStale = _profiles.any((p) => p.isActive);
-        if (!hasStale) return;
-        final now = DateTime.now();
-        final list = _profiles.map((p) {
-          if (!p.isActive) return p;
-          int sessionMinutes = 0;
-          if (p.shieldActivatedAt != null) {
-            final activated = DateTime.tryParse(p.shieldActivatedAt!);
-            if (activated != null) {
-              sessionMinutes = now.difference(activated).inMinutes;
-            }
+      final activeProfiles = _profiles.where((p) => p.isActive).toList();
+      if (activeProfiles.isEmpty) return;
+
+      // Check each active profile's shield in parallel.
+      final shieldStates = await Future.wait(
+        activeProfiles.map((p) => _ds.isShieldActive(profileId: p.id)),
+      );
+      final stillActive = {
+        for (var i = 0; i < activeProfiles.length; i++)
+          activeProfiles[i].id: shieldStates[i],
+      };
+      final hasStale = stillActive.values.any((v) => v == false);
+      if (!hasStale) return;
+
+      final now = DateTime.now();
+      final list = _profiles.map((p) {
+        if (!p.isActive) return p;
+        if (stillActive[p.id] != false) return p;
+        int sessionMinutes = 0;
+        if (p.shieldActivatedAt != null) {
+          final activated = DateTime.tryParse(p.shieldActivatedAt!);
+          if (activated != null) {
+            sessionMinutes =
+                now.difference(activated).inMinutes.clamp(0, 1 << 30);
           }
-          return p.copyWith(
-            isActive: false,
-            shieldActivatedAt: null,
-            totalSavedMinutes: p.totalSavedMinutes + sessionMinutes,
-          );
-        }).toList();
-        state = AsyncData(list);
-        await _persist(list);
-      }
+        }
+        return p.copyWith(
+          isActive: false,
+          shieldActivatedAt: null,
+          totalSavedMinutes: p.totalSavedMinutes + sessionMinutes,
+        );
+      }).toList();
+      state = AsyncData(list);
+      await _persist(list);
     } catch (e) {
       debugPrint('[ProfilesNotifier] refreshShieldState failed: $e');
     }
   }
 
-  /// Delete all profiles, PIN, and preferences. Removes any active shield first.
+  /// Delete all profiles, PIN, and preferences. Removes every active shield.
   Future<void> deleteAllData() async {
+    // Best-effort clear of every active profile's shield.
+    for (final p in _profiles.where((p) => p.isActive)) {
+      try {
+        await _ds.removeShield(profileId: p.id);
+      } catch (_) {}
+    }
     try {
-      await _ds.removeShield();
       await _ds.stopMonitoring();
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();

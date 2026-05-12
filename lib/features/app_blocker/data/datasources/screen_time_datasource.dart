@@ -28,8 +28,11 @@ class ScreenTimeDatasource {
       }) ??
       false;
 
-  Future<bool> removeShield() async =>
-      await _channel.invokeMethod<bool>('removeShield') ?? false;
+  Future<bool> removeShield({required String profileId}) async =>
+      await _channel.invokeMethod<bool>('removeShield', {
+        'profileId': profileId,
+      }) ??
+      false;
 
   Future<bool> startSchedule({
     required String profileId,
@@ -57,11 +60,20 @@ class ScreenTimeDatasource {
       }) ??
       false;
 
-  Future<bool> stopMonitoring() async =>
-      await _channel.invokeMethod<bool>('stopMonitoring') ?? false;
+  /// Stop monitoring for [profileId] only, or all profiles if null.
+  Future<bool> stopMonitoring({String? profileId}) async =>
+      await _channel.invokeMethod<bool>('stopMonitoring', {
+        'profileId': ?profileId,
+      }) ??
+      false;
 
-  Future<bool> isShieldActive() async =>
-      await _channel.invokeMethod<bool>('isShieldActive') ?? false;
+  /// Returns true if the named profile currently has an active shield at the
+  /// OS level. Pass the profile ID to check a specific profile.
+  Future<bool> isShieldActive({required String profileId}) async =>
+      await _channel.invokeMethod<bool>('isShieldActive', {
+        'profileId': profileId,
+      }) ??
+      false;
 
   /// Stash active profile pointers without applying a shield. Used when the
   /// profile is "armed" (usage-limit-only) but the shield should only engage

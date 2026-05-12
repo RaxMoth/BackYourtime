@@ -3,52 +3,69 @@ import ManagedSettings
 import FamilyControls
 import Foundation
 
+/// Extension that reacts to OS-level events from `DeviceActivityCenter`:
+///   • intervalDidStart – a scheduled time window has begun → apply shield
+///   • intervalDidEnd   – a scheduled window has ended      → lift shield
+///   • eventDidReachThreshold – usage limit reached         → apply shield
+///
+/// Activity names are scoped per profile:
+///   "unspend.schedule.<profileId>" and "unspend.limit.<profileId>"
+/// We extract the profileId from the activity name and operate on that
+/// profile's dedicated `ManagedSettingsStore` so different profiles don't
+/// stomp each other's shields.
 class FocusMonitor: DeviceActivityMonitor {
-    private let store = ManagedSettingsStore(named: .unspend)
-    // Optional — defensive against App Group misconfiguration. Force-unwrap
-    // here would crash the extension silently and leave the user with no
-    // shield enforcement at all.
+
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")
 
-    // Called when schedule interval STARTS → apply shield
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
-        applyShield()
+        guard let profileId = profileId(from: activity) else { return }
+        applyShield(profileId: profileId)
     }
 
-    // Called when schedule interval ENDS → remove shield
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
-        store.shield.applications = nil
-        store.shield.applicationCategories = nil
-        store.clearAllSettings()
-        sharedDefaults?.removeObject(forKey: "activeProfileName")
+        guard let profileId = profileId(from: activity) else { return }
+        clearShield(profileId: profileId)
     }
 
-    // Called when usage threshold is hit → apply shield
     override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name,
                                           activity: DeviceActivityName) {
         super.eventDidReachThreshold(event, activity: activity)
-        applyShield()
+        guard let profileId = profileId(from: activity) else { return }
+        applyShield(profileId: profileId)
     }
 
-    private func applyShield() {
-        // Look up the currently-active profile and shield its specific
-        // selection. The Runner side stashes activeProfileId whenever it
-        // applies a shield or registers monitoring — we just follow that
-        // pointer here.
+    // MARK: - Helpers
+
+    /// Activity name format: "unspend.<kind>.<profileId>".
+    /// Extracts profileId, returning nil if the name doesn't match.
+    private func profileId(from activity: DeviceActivityName) -> String? {
+        let raw = activity.rawValue
+        // Split off the prefix; keep everything after "unspend.schedule." or
+        // "unspend.limit." so profile IDs that contain dots survive intact.
+        for prefix in ["unspend.schedule.", "unspend.limit."] {
+            if raw.hasPrefix(prefix) {
+                return String(raw.dropFirst(prefix.count))
+            }
+        }
+        return nil
+    }
+
+    private func applyShield(profileId: String) {
         guard let defaults = sharedDefaults,
-              let profileId = defaults.string(forKey: "activeProfileId"),
               let data = defaults.data(forKey: "blockedApps_\(profileId)"),
               let selection = try? JSONDecoder().decode(
                   FamilyActivitySelection.self, from: data) else { return }
+        let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("unspend.\(profileId)"))
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
     }
-}
 
-// NOTE: Intentionally duplicated from ScreenTimeChannel.swift (Runner target).
-// These are separate compilation targets and cannot share code without a shared framework.
-extension ManagedSettingsStore.Name {
-    static let unspend = Self("unspend")
+    private func clearShield(profileId: String) {
+        let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("unspend.\(profileId)"))
+        store.shield.applications = nil
+        store.shield.applicationCategories = nil
+        store.clearAllSettings()
+    }
 }

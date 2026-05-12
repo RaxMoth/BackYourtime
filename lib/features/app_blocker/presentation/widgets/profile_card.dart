@@ -100,20 +100,26 @@ class _ProfileCardState extends ConsumerState<ProfileCard> {
     return Semantics(
       label:
           '${profile.name}, ${profile.subtitle}, ${profile.isActive ? S.current.activateShield : S.current.shieldsInactive}',
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: kSurface,
-            borderRadius: BorderRadius.circular(kRadius),
-            border: Border.all(
-              color: profile.isActive
-                  ? profile.color.withValues(alpha: 0.4)
-                  : kBorder,
+      child: Material(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(kRadius),
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.onTap();
+          },
+          borderRadius: BorderRadius.circular(kRadius),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(kRadius),
+              border: Border.all(
+                color: profile.isActive
+                    ? profile.color.withValues(alpha: 0.4)
+                    : kBorder,
+              ),
             ),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
+            padding: const EdgeInsets.all(16),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -326,6 +332,7 @@ class _ProfileCardState extends ConsumerState<ProfileCard> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

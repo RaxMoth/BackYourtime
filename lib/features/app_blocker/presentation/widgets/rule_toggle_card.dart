@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:unspend/core/theme/design_tokens.dart';
 
 class RuleToggleCard extends StatelessWidget {
@@ -23,21 +24,35 @@ class RuleToggleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void handleTap() {
+      if (locked) return;
+      HapticFeedback.selectionClick();
+      onToggle(!enabled);
+    }
+
     return Semantics(
       label: '$title, ${enabled ? "enabled" : "disabled"}',
       toggled: enabled,
       child: Opacity(
         opacity: locked ? 0.6 : 1.0,
-        child: Container(
-          decoration: BoxDecoration(
-            color: enabled ? accent.withValues(alpha: 0.08) : kSurface,
+        child: Material(
+          color: enabled ? accent.withValues(alpha: 0.08) : kSurface,
+          borderRadius: BorderRadius.circular(kRadius),
+          child: InkWell(
+            onTap: locked ? null : handleTap,
             borderRadius: BorderRadius.circular(kRadius),
-            border: Border.all(
-              color: enabled ? accent.withValues(alpha: 0.4) : kBorder,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(kRadius),
+                border: Border.all(
+                  color: enabled ? accent.withValues(alpha: 0.4) : kBorder,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              child: Row(
             children: [
               Icon(icon, size: 22, color: enabled ? accent : kTextSecondary),
               const SizedBox(width: 12),
@@ -100,6 +115,8 @@ class RuleToggleCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+            ),
           ),
         ),
       ),

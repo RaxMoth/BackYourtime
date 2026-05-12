@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:unspend/core/theme/design_tokens.dart';
 
 // ── Section Label ───────────────────────────────────────────────────────────
@@ -58,35 +59,110 @@ class TimeTile extends StatelessWidget {
     return Semantics(
       label: '$label $formatted',
       button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: kBg,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: kBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: TextStyle(color: kTextSecondary, fontSize: 11)),
-              const SizedBox(height: 4),
-              Text(
-                formatted,
-                style: TextStyle(
-                  color: kTextPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+      child: Material(
+        color: kBg,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: kBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(color: kTextSecondary, fontSize: 11),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  formatted,
+                  style: TextStyle(
+                    color: kTextPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+// ── Pressable Card ──────────────────────────────────────────────────────────
+/// A `SectionCard` that responds to taps with ink ripple + haptic feedback.
+/// Use whenever a card-shaped surface is itself tappable.
+class PressableCard extends StatelessWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final HapticFeedbackType haptic;
+
+  const PressableCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.onLongPress,
+    this.haptic = HapticFeedbackType.selection,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: kSurface,
+      borderRadius: BorderRadius.circular(kRadius),
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                _fire(haptic);
+                onTap!();
+              },
+        onLongPress: onLongPress == null
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                onLongPress!();
+              },
+        borderRadius: BorderRadius.circular(kRadius),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(kRadius),
+            border: Border.all(color: kBorder),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  static void _fire(HapticFeedbackType haptic) {
+    switch (haptic) {
+      case HapticFeedbackType.selection:
+        HapticFeedback.selectionClick();
+      case HapticFeedbackType.light:
+        HapticFeedback.lightImpact();
+      case HapticFeedbackType.medium:
+        HapticFeedback.mediumImpact();
+      case HapticFeedbackType.heavy:
+        HapticFeedback.heavyImpact();
+      case HapticFeedbackType.none:
+        break;
+    }
+  }
+}
+
+enum HapticFeedbackType { none, selection, light, medium, heavy }
 
 // ── Full Width Button ───────────────────────────────────────────────────────
 class FullWidthButton extends StatelessWidget {
@@ -117,10 +193,17 @@ class FullWidthButton extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: TextButton(
-          onPressed: onPressed,
+          onPressed: enabled
+              ? () {
+                  HapticFeedback.lightImpact();
+                  onPressed!();
+                }
+              : null,
           style: TextButton.styleFrom(
             backgroundColor:
                 enabled ? bgColor : bgColor.withValues(alpha: 0.3),
+            // Slight overlay on press for visible state change
+            overlayColor: color.withValues(alpha: 0.12),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),

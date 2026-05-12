@@ -114,6 +114,14 @@ abstract class S {
   String get blockRulesDescription;
   String appsSelected(int count);
   String get selectAppsToBlock;
+  String get tapToChooseApps;
+  String get tapToEditSelection;
+
+  // ── Time picker ──────────────────────────────────────────────────────────
+  String get pickerModeWheel;
+  String get pickerModeKeypad;
+  String get hoursShort;
+  String get minutesShort;
 
   // ── Block Rules ──────────────────────────────────────────────────────────
   String get scheduleTitle;
@@ -299,6 +307,18 @@ class _En extends S {
   String appsSelected(int count) => '$count apps selected';
   @override
   String get selectAppsToBlock => 'Select Apps to Block';
+  @override
+  String get tapToChooseApps => 'Tap to choose the apps this profile blocks';
+  @override
+  String get tapToEditSelection => 'Tap to view or change the selection';
+  @override
+  String get pickerModeWheel => 'Wheel';
+  @override
+  String get pickerModeKeypad => 'Keypad';
+  @override
+  String get hoursShort => 'HRS';
+  @override
+  String get minutesShort => 'MIN';
 
   @override
   String get scheduleTitle => 'Schedule';
@@ -556,6 +576,18 @@ class _De extends S {
   String appsSelected(int count) => '$count Apps ausgewählt';
   @override
   String get selectAppsToBlock => 'Apps zum Blockieren auswählen';
+  @override
+  String get tapToChooseApps => 'Tippe, um Apps für dieses Profil zu wählen';
+  @override
+  String get tapToEditSelection => 'Tippe, um die Auswahl anzusehen oder zu ändern';
+  @override
+  String get pickerModeWheel => 'Rad';
+  @override
+  String get pickerModeKeypad => 'Zahlen';
+  @override
+  String get hoursShort => 'STD';
+  @override
+  String get minutesShort => 'MIN';
 
   @override
   String get scheduleTitle => 'Zeitplan';
@@ -819,6 +851,18 @@ class _Es extends S {
   String appsSelected(int count) => '$count apps seleccionadas';
   @override
   String get selectAppsToBlock => 'Seleccionar apps a bloquear';
+  @override
+  String get tapToChooseApps => 'Toca para elegir las apps que este perfil bloquea';
+  @override
+  String get tapToEditSelection => 'Toca para ver o cambiar la selección';
+  @override
+  String get pickerModeWheel => 'Rueda';
+  @override
+  String get pickerModeKeypad => 'Teclado';
+  @override
+  String get hoursShort => 'HRS';
+  @override
+  String get minutesShort => 'MIN';
 
   @override
   String get scheduleTitle => 'Horario';
@@ -1081,6 +1125,18 @@ class _Fr extends S {
   String appsSelected(int count) => '$count apps sélectionnées';
   @override
   String get selectAppsToBlock => 'Sélectionner les apps à bloquer';
+  @override
+  String get tapToChooseApps => 'Touchez pour choisir les apps de ce profil';
+  @override
+  String get tapToEditSelection => 'Touchez pour voir ou modifier la sélection';
+  @override
+  String get pickerModeWheel => 'Molette';
+  @override
+  String get pickerModeKeypad => 'Clavier';
+  @override
+  String get hoursShort => 'HRS';
+  @override
+  String get minutesShort => 'MIN';
 
   @override
   String get scheduleTitle => 'Horaire';
@@ -1344,6 +1400,18 @@ class _Hr extends S {
   String appsSelected(int count) => '$count aplikacija odabrano';
   @override
   String get selectAppsToBlock => 'Odaberi aplikacije za blokiranje';
+  @override
+  String get tapToChooseApps => 'Dodirni za odabir aplikacija za ovaj profil';
+  @override
+  String get tapToEditSelection => 'Dodirni za pregled ili promjenu odabira';
+  @override
+  String get pickerModeWheel => 'Kotač';
+  @override
+  String get pickerModeKeypad => 'Tipke';
+  @override
+  String get hoursShort => 'SATI';
+  @override
+  String get minutesShort => 'MIN';
 
   @override
   String get scheduleTitle => 'Raspored';
