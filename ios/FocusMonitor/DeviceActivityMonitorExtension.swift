@@ -5,7 +5,10 @@ import Foundation
 
 class FocusMonitor: DeviceActivityMonitor {
     private let store = ManagedSettingsStore(named: .unspend)
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")!
+    // Optional — defensive against App Group misconfiguration. Force-unwrap
+    // here would crash the extension silently and leave the user with no
+    // shield enforcement at all.
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")
 
     // Called when schedule interval STARTS → apply shield
     override func intervalDidStart(for activity: DeviceActivityName) {
@@ -19,7 +22,7 @@ class FocusMonitor: DeviceActivityMonitor {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
         store.clearAllSettings()
-        sharedDefaults.removeObject(forKey: "activeProfileName")
+        sharedDefaults?.removeObject(forKey: "activeProfileName")
     }
 
     // Called when usage threshold is hit → apply shield
@@ -30,7 +33,13 @@ class FocusMonitor: DeviceActivityMonitor {
     }
 
     private func applyShield() {
-        guard let data = sharedDefaults.data(forKey: "blockedApps"),
+        // Look up the currently-active profile and shield its specific
+        // selection. The Runner side stashes activeProfileId whenever it
+        // applies a shield or registers monitoring — we just follow that
+        // pointer here.
+        guard let defaults = sharedDefaults,
+              let profileId = defaults.string(forKey: "activeProfileId"),
+              let data = defaults.data(forKey: "blockedApps_\(profileId)"),
               let selection = try? JSONDecoder().decode(
                   FamilyActivitySelection.self, from: data) else { return }
         store.shield.applications = selection.applicationTokens

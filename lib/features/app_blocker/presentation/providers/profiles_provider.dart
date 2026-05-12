@@ -124,7 +124,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
   // ── Actions on individual profiles ─────────────────────────────────────
 
   Future<void> pickAppsForProfile(String id) async {
-    final count = await _ds.showAppPicker();
+    final count = await _ds.showAppPicker(profileId: id);
     if (count == 0) return; // User cancelled
     final list = _profiles.map((p) {
       if (p.id != id) return p;
@@ -157,12 +157,19 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
           (profile.taskModeEnabled && !profile.allTasksDone);
 
       if (shouldShieldNow) {
-        await _ds.applyShield(profileName: profile.name);
+        await _ds.applyShield(
+          profileId: profile.id,
+          profileName: profile.name,
+        );
       } else {
-        // Even when we don't shield immediately, the profile name needs to
-        // be available so the ShieldConfigurationExtension can show it
-        // once the shield does engage from a DeviceActivity event.
-        await _ds.cacheActiveProfileName(profile.name);
+        // Even when we don't shield immediately, both pointers need to be
+        // available so DeviceActivityMonitor can resolve the right
+        // selection — and ShieldConfigurationExtension can show the name —
+        // once the shield engages from a DeviceActivity event.
+        await _ds.cacheActiveProfile(
+          profileId: profile.id,
+          profileName: profile.name,
+        );
       }
 
       // Schedule: register the daily window with iOS so FocusMonitor's
@@ -171,6 +178,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
           profile.scheduleStartHour != null &&
           profile.scheduleEndHour != null) {
         await _ds.startSchedule(
+          profileId: profile.id,
           startHour: profile.scheduleStartHour!,
           startMinute: profile.scheduleStartMinute ?? 0,
           endHour: profile.scheduleEndHour!,
@@ -180,7 +188,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
       // Usage limit: register the daily threshold event.
       if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
-        await _ds.startUsageLimit(minutes: profile.usageLimitMinutes!);
+        await _ds.startUsageLimit(
+          profileId: profile.id,
+          minutes: profile.usageLimitMinutes!,
+        );
       }
     } catch (e) {
       // Roll back – attempt to remove any partially-applied shield.
@@ -329,7 +340,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
         if (updatedProfile.allTasksDone) {
           await _ds.removeShield();
         } else {
-          await _ds.applyShield(profileName: updatedProfile.name);
+          await _ds.applyShield(
+            profileId: updatedProfile.id,
+            profileName: updatedProfile.name,
+          );
         }
       } catch (e) {
         debugPrint('[ProfilesNotifier] Auto-shield toggle failed: $e');

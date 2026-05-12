@@ -4,6 +4,24 @@ import ManagedSettings
 import DeviceActivity
 import Foundation
 
+// Keys stored in the shared App Group UserDefaults.
+//
+// Per-profile selection: each BlockerProfile gets its own FamilyActivitySelection
+// stored under `blockedApps_<profileId>`. This is what the picker writes and what
+// every shield-applying code path (Runner + extensions) reads.
+//
+// Active profile pointers: `activeProfileId` tells extensions which selection to
+// use when an event fires; `activeProfileName` is for the shield UI.
+private enum DefaultsKey {
+    static let activeProfileId   = "activeProfileId"
+    static let activeProfileName = "activeProfileName"
+    static let legacySelection   = "blockedApps"  // pre-v1.0 single-profile key
+
+    static func selection(for profileId: String) -> String {
+        return "blockedApps_\(profileId)"
+    }
+}
+
 class ScreenTimeChannel {
     static let channelName = "com.maxroth.backyourtime/screentime"
     static let appGroupID = "group.com.maxroth.backyourtime"
@@ -21,49 +39,59 @@ class ScreenTimeChannel {
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as? [String: Any]
+        let profileId = args?["profileId"] as? String
+
         switch call.method {
         case "requestAuthorization":
             Task { await requestAuth(result: result) }
 
         case "applyShield":
-            applyShield(call: call, result: result)
+            applyShield(profileId: profileId, profileName: args?["profileName"] as? String, result: result)
 
         case "removeShield":
             removeShield(result: result)
 
         case "startSchedule":
-            if let args = call.arguments as? [String: Any],
-               let startHour = args["startHour"] as? Int,
-               let startMin = args["startMinute"] as? Int,
-               let endHour = args["endHour"] as? Int,
-               let endMin = args["endMinute"] as? Int {
-                startSchedule(startHour: startHour, startMin: startMin,
+            if let pid = profileId,
+               let startHour = args?["startHour"] as? Int,
+               let startMin = args?["startMinute"] as? Int,
+               let endHour = args?["endHour"] as? Int,
+               let endMin = args?["endMinute"] as? Int {
+                startSchedule(profileId: pid, startHour: startHour, startMin: startMin,
                               endHour: endHour, endMin: endMin, result: result)
             } else {
-                result(FlutterError(code: "INVALID_ARGS", message: "Missing schedule args", details: nil))
+                result(FlutterError(code: "INVALID_ARGS", message: "Missing schedule args (profileId, start, end)", details: nil))
             }
 
         case "startUsageLimit":
-            if let args = call.arguments as? [String: Any],
-               let minutes = args["minutes"] as? Int {
-                startUsageLimit(minutes: minutes, result: result)
+            if let pid = profileId, let minutes = args?["minutes"] as? Int {
+                startUsageLimit(profileId: pid, minutes: minutes, result: result)
             } else {
-                result(FlutterError(code: "INVALID_ARGS", message: "Missing minutes arg", details: nil))
+                result(FlutterError(code: "INVALID_ARGS", message: "Missing profileId or minutes arg", details: nil))
             }
 
         case "stopMonitoring":
             DeviceActivityCenter().stopMonitoring()
             result(true)
 
-        case "cacheActiveProfileName":
-            if let args = call.arguments as? [String: Any],
-               let profileName = args["profileName"] as? String,
-               let defaults = sharedDefaults {
-                defaults.set(profileName, forKey: "activeProfileName")
+        case "cacheActiveProfile":
+            // Called when a profile is "active" but no immediate shield is
+            // applied (e.g. usage-limit-only). Stashes both ID + display
+            // name so DeviceActivityMonitor + ShieldConfigurationExtension
+            // can resolve the right selection when an event later fires.
+            if let pid = profileId, let defaults = sharedDefaults {
+                defaults.set(pid, forKey: DefaultsKey.activeProfileId)
+                if let name = args?["profileName"] as? String {
+                    defaults.set(name, forKey: DefaultsKey.activeProfileName)
+                }
                 result(true)
             } else {
                 result(false)
             }
+
+        case "hasSelection":
+            result(profileId.flatMap { loadSelection(for: $0) } != nil)
 
         case "isShieldActive":
             result(store.shield.applications?.isEmpty == false)
@@ -86,21 +114,35 @@ class ScreenTimeChannel {
         }
     }
 
-    private func applyShield(call: FlutterMethodCall, result: FlutterResult) {
+    // MARK: - Selection helpers
+
+    private func loadSelection(for profileId: String) -> FamilyActivitySelection? {
+        guard let defaults = sharedDefaults,
+              let data = defaults.data(forKey: DefaultsKey.selection(for: profileId)),
+              let selection = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) else {
+            return nil
+        }
+        return selection
+    }
+
+    // MARK: - Shield / monitoring
+
+    private func applyShield(profileId: String?, profileName: String?, result: FlutterResult) {
         guard let defaults = sharedDefaults else {
             result(FlutterError(code: "NO_APP_GROUP", message: "App Group entitlement missing", details: nil))
             return
         }
-        guard let data = defaults.data(forKey: "blockedApps"),
-              let selection = try? JSONDecoder().decode(
-                  FamilyActivitySelection.self, from: data) else {
-            result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
+        guard let pid = profileId else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing profileId", details: nil))
             return
         }
-        // Store active profile name for ShieldConfigurationExtension
-        if let args = call.arguments as? [String: Any],
-           let profileName = args["profileName"] as? String {
-            defaults.set(profileName, forKey: "activeProfileName")
+        guard let selection = loadSelection(for: pid) else {
+            result(FlutterError(code: "NO_SELECTION", message: "No apps selected for profile \(pid)", details: nil))
+            return
+        }
+        defaults.set(pid, forKey: DefaultsKey.activeProfileId)
+        if let name = profileName {
+            defaults.set(name, forKey: DefaultsKey.activeProfileName)
         }
         store.shield.applications = selection.applicationTokens
         store.shield.applicationCategories = .specific(selection.categoryTokens)
@@ -111,17 +153,15 @@ class ScreenTimeChannel {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
         store.clearAllSettings()
-        sharedDefaults?.removeObject(forKey: "activeProfileName")
-        // NOTE: do NOT clear "blockedApps" here. That key holds the user's
-        // app SELECTION (written by the FamilyActivityPicker), not the
-        // currently-shielded set. We need it to survive deactivation so
-        // that toggleTask's auto re-shield, schedule starts, and usage
-        // threshold callbacks can all re-engage the same selection.
+        sharedDefaults?.removeObject(forKey: DefaultsKey.activeProfileId)
+        sharedDefaults?.removeObject(forKey: DefaultsKey.activeProfileName)
+        // NOTE: do NOT clear the per-profile blockedApps_<id> selection here.
+        // That's the user's saved pick, separate from shield state.
         DeviceActivityCenter().stopMonitoring()
         result(true)
     }
 
-    private func startSchedule(startHour: Int, startMin: Int,
+    private func startSchedule(profileId: String, startHour: Int, startMin: Int,
                                 endHour: Int, endMin: Int,
                                 result: FlutterResult) {
         let center = DeviceActivityCenter()
@@ -130,6 +170,9 @@ class ScreenTimeChannel {
             intervalEnd: DateComponents(hour: endHour, minute: endMin),
             repeats: true
         )
+        // Persist profileId so DeviceActivityMonitor can look up the right
+        // selection when intervalDidStart fires.
+        sharedDefaults?.set(profileId, forKey: DefaultsKey.activeProfileId)
         do {
             try center.startMonitoring(.focusSchedule, during: schedule)
             result(true)
@@ -138,17 +181,12 @@ class ScreenTimeChannel {
         }
     }
 
-    private func startUsageLimit(minutes: Int, result: FlutterResult) {
-        guard let defaults = sharedDefaults else {
-            result(FlutterError(code: "NO_APP_GROUP", message: "App Group entitlement missing", details: nil))
+    private func startUsageLimit(profileId: String, minutes: Int, result: FlutterResult) {
+        guard let selection = loadSelection(for: profileId) else {
+            result(FlutterError(code: "NO_SELECTION", message: "No apps selected for profile \(profileId)", details: nil))
             return
         }
-        guard let data = defaults.data(forKey: "blockedApps"),
-              let selection = try? JSONDecoder().decode(
-                  FamilyActivitySelection.self, from: data) else {
-            result(FlutterError(code: "NO_SELECTION", message: "No apps selected", details: nil))
-            return
-        }
+        sharedDefaults?.set(profileId, forKey: DefaultsKey.activeProfileId)
         let center = DeviceActivityCenter()
         let schedule = DeviceActivitySchedule(
             intervalStart: DateComponents(hour: 0, minute: 0),
@@ -157,8 +195,7 @@ class ScreenTimeChannel {
         )
         // Watch every token type the user picked — apps, categories, and
         // web domains. Without categories/webDomains here, the threshold
-        // never fires for category-only selections (the most common case
-        // when users pick "Social" or "Games" from the system picker).
+        // never fires for category-only selections.
         let event = DeviceActivityEvent(
             applications: selection.applicationTokens,
             categories: selection.categoryTokens,

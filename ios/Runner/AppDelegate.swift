@@ -26,14 +26,20 @@ import FamilyControls
         )
         pickerChannel?.setMethodCallHandler { [weak self] call, result in
             if call.method == "showPicker" {
-                self?.showAppPicker(result: result)
+                let args = call.arguments as? [String: Any]
+                let profileId = args?["profileId"] as? String ?? ""
+                self?.showAppPicker(profileId: profileId, result: result)
             } else {
                 result(FlutterMethodNotImplemented)
             }
         }
     }
 
-    private func showAppPicker(result: @escaping FlutterResult) {
+    private func showAppPicker(profileId: String, result: @escaping FlutterResult) {
+        guard !profileId.isEmpty else {
+            result(FlutterError(code: "INVALID_ARGS", message: "Missing profileId", details: nil))
+            return
+        }
         let rootVC: UIViewController? = window?.rootViewController
             ?? UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
@@ -44,6 +50,7 @@ import FamilyControls
             return
         }
         let pickerVC = AppPickerViewController()
+        pickerVC.profileId = profileId
         pickerVC.onSelectionSaved = { count in result(count) }
         pickerVC.modalPresentationStyle = .formSheet
         rootVC.present(pickerVC, animated: true)

@@ -4,16 +4,24 @@ import FamilyControls
 import Foundation
 
 class AppPickerViewController: UIViewController {
+    /// Profile ID this picker is editing. Required — selection is stored
+    /// per-profile under `blockedApps_<profileId>`.
+    var profileId: String = ""
+
+    /// (count, selectionData) — selectionData is JSON-encoded FamilyActivitySelection
     var onSelectionSaved: ((Int) -> Void)?
     private let sharedDefaults = UserDefaults(suiteName: "group.com.maxroth.backyourtime")
+
+    private var selectionKey: String { "blockedApps_\(profileId)" }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Pre-populate the picker with whatever the user picked before,
-        // so re-opening the picker shows their current selection (not blank).
+        // Pre-populate the picker with this profile's existing selection,
+        // so re-opening the picker shows the user what they previously picked.
         let initial: FamilyActivitySelection = {
-            guard let data = sharedDefaults?.data(forKey: "blockedApps"),
+            guard !profileId.isEmpty,
+                  let data = sharedDefaults?.data(forKey: selectionKey),
                   let stored = try? JSONDecoder().decode(
                       FamilyActivitySelection.self, from: data) else {
                 return FamilyActivitySelection()
@@ -21,6 +29,7 @@ class AppPickerViewController: UIViewController {
             return stored
         }()
 
+        let key = selectionKey
         let pickerView = AppPickerView(
             initialSelection: initial,
             onSave: { [weak self] selection in
@@ -28,7 +37,7 @@ class AppPickerViewController: UIViewController {
                     + selection.categoryTokens.count
                     + selection.webDomainTokens.count
                 if let data = try? JSONEncoder().encode(selection) {
-                    self?.sharedDefaults?.set(data, forKey: "blockedApps")
+                    self?.sharedDefaults?.set(data, forKey: key)
                 }
                 self?.dismiss(animated: true) {
                     self?.onSelectionSaved?(count)
