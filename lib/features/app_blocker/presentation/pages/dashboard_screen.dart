@@ -90,7 +90,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               child: Text(
                 S.current.create,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -135,8 +138,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: const Icon(Icons.add_rounded, size: 28),
       ),
       body: profilesAsync.when(
-        data: (profiles) =>
-            SafeArea(child: DashboardBody(profiles: profiles)),
+        data: (profiles) => SafeArea(child: DashboardBody(profiles: profiles)),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

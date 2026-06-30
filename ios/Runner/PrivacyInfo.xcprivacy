@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy Manifest for Unspend.
+
+  Apple requires every app submitted on/after May 1, 2024 to ship a
+  PrivacyInfo.xcprivacy declaring (a) which "Required Reason APIs" the app
+  uses + why, (b) any tracking, (c) any data types collected, (d) any
+  domains used for tracking.
+
+  Unspend does not collect, track, or transmit user data. The only Required
+  Reason API used directly is UserDefaults (for app preferences + the App
+  Group used to pass FamilyActivitySelection between the main app and the
+  extensions). Plugins (flutter_secure_storage_darwin, shared_preferences_foundation)
+  carry their own privacy manifests inside their pods.
+
+  References:
+    https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
+    https://developer.apple.com/documentation/bundleresources/describing_use_of_required_reason_api
+-->
+<plist version="1.0">
+<dict>
+    <!-- We do not track users across apps or websites. -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- No tracking domains. -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- No personal data is collected, transmitted, or shared. -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+
+    <!-- Required Reason APIs in use. -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <!-- UserDefaults: used to persist user preferences (selected
+                 locale, theme, profiles, hashed PIN salt) and to share
+                 FamilyActivitySelection across the app + extensions via
+                 an App Group. Both are app-functionality use cases. -->
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
