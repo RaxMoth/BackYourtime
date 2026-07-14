@@ -308,34 +308,39 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           children: ProfileColor.palette.map((pc) {
                             final isSelected =
                                 pc.color.toARGB32() == _selectedColorValue;
-                            return GestureDetector(
-                              onTap: () {
-                                setState(
-                                  () => _selectedColorValue =
-                                      pc.color.toARGB32(),
-                                );
-                                _save();
-                              },
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: pc.color,
-                                  shape: BoxShape.circle,
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: kTextPrimary,
-                                          width: 2.5,
-                                        )
-                                      : null,
+                            final shape = CircleBorder(
+                              side: isSelected
+                                  ? BorderSide(color: kTextPrimary, width: 2.5)
+                                  : BorderSide.none,
+                            );
+                            return Semantics(
+                              button: true,
+                              selected: isSelected,
+                              label: pc.name,
+                              child: Material(
+                                color: pc.color,
+                                shape: shape,
+                                child: InkWell(
+                                  customBorder: shape,
+                                  onTap: () {
+                                    setState(
+                                      () => _selectedColorValue =
+                                          pc.color.toARGB32(),
+                                    );
+                                    _save();
+                                  },
+                                  child: SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: isSelected
+                                        ? Icon(
+                                            Icons.check,
+                                            color: kTextPrimary,
+                                            size: 18,
+                                          )
+                                        : null,
+                                  ),
                                 ),
-                                child: isSelected
-                                    ? Icon(
-                                        Icons.check,
-                                        color: kTextPrimary,
-                                        size: 18,
-                                      )
-                                    : null,
                               ),
                             );
                           }).toList(),
@@ -356,27 +361,40 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           runSpacing: 10,
                           children: ProfileIcon.options.map((pi) {
                             final isSelected = pi.label == _selectedIconLabel;
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() => _selectedIconLabel = pi.label);
-                                _save();
-                              },
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? accent.withValues(alpha: 0.2)
-                                      : kSurface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected ? accent : kBorder,
+                            final shape = RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(
+                                color: isSelected ? accent : kBorder,
+                              ),
+                            );
+                            return Semantics(
+                              button: true,
+                              selected: isSelected,
+                              label: pi.label,
+                              child: Material(
+                                color: isSelected
+                                    ? accent.withValues(alpha: 0.2)
+                                    : kSurface,
+                                shape: shape,
+                                child: InkWell(
+                                  customBorder: shape,
+                                  onTap: () {
+                                    setState(
+                                      () => _selectedIconLabel = pi.label,
+                                    );
+                                    _save();
+                                  },
+                                  child: SizedBox(
+                                    width: 44,
+                                    height: 44,
+                                    child: Icon(
+                                      pi.icon,
+                                      size: 22,
+                                      color: isSelected
+                                          ? accent
+                                          : kTextSecondary,
+                                    ),
                                   ),
-                                ),
-                                child: Icon(
-                                  pi.icon,
-                                  size: 22,
-                                  color: isSelected ? accent : kTextSecondary,
                                 ),
                               ),
                             );
@@ -702,7 +720,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                           SnackBar(
                                             content: Text(
                                               S.current.errorGeneric(
-                                                'Activation failed',
+                                                S.current.activationFailed,
                                               ),
                                               style: TextStyle(
                                                 color: kTextPrimary,

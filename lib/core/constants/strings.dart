@@ -73,6 +73,7 @@ abstract class S {
   String get create;
   String get untitled;
   String errorGeneric(Object e);
+  String get activationFailed;
 
   // ── Dashboard ────────────────────────────────────────────────────────────
   String get profilesSectionTitle;
@@ -236,6 +237,8 @@ class _En extends S {
   String get untitled => 'Untitled';
   @override
   String errorGeneric(Object e) => 'Error: $e';
+  @override
+  String get activationFailed => 'Activation failed';
 
   @override
   String get profilesSectionTitle => 'Profiles';
@@ -504,6 +507,8 @@ class _De extends S {
   String get untitled => 'Unbenannt';
   @override
   String errorGeneric(Object e) => 'Fehler: $e';
+  @override
+  String get activationFailed => 'Aktivierung fehlgeschlagen';
 
   @override
   String get profilesSectionTitle => 'Profile';
@@ -777,6 +782,8 @@ class _Es extends S {
   String get untitled => 'Sin título';
   @override
   String errorGeneric(Object e) => 'Error: $e';
+  @override
+  String get activationFailed => 'Error de activación';
 
   @override
   String get profilesSectionTitle => 'Perfiles';
@@ -1051,6 +1058,8 @@ class _Fr extends S {
   String get untitled => 'Sans titre';
   @override
   String errorGeneric(Object e) => 'Erreur : $e';
+  @override
+  String get activationFailed => 'Échec de l\'activation';
 
   @override
   String get profilesSectionTitle => 'Profils';
@@ -1327,6 +1336,8 @@ class _Hr extends S {
   String get untitled => 'Bez naziva';
   @override
   String errorGeneric(Object e) => 'Greška: $e';
+  @override
+  String get activationFailed => 'Aktivacija nije uspjela';
 
   @override
   String get profilesSectionTitle => 'Profili';

@@ -18,6 +18,8 @@ Color get kSurfaceHigh =>
 Color get kBorder =>
     _isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE0E0E0);
 const kAccent = Color(0xFFE53935);
+/// Success / completed state (task done, profile unlocked).
+const kSuccess = Color(0xFF43A047);
 Color get kAccentDark =>
     _isDark ? const Color(0xFF8B1A1A) : const Color(0xFFFFCDD2);
 Color get kTextPrimary =>

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/security/pin_hasher.dart';
 import '../../data/datasources/screen_time_datasource.dart';
 import '../../domain/entities/blocker_profile.dart';
 import 'shield_activity_provider.dart';
@@ -372,11 +372,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
 
   Future<bool> savePin(String pin) async {
     try {
-      final salt = List.generate(
-        16,
-        (_) => Random.secure().nextInt(256),
-      ).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      final hash = sha256.convert(utf8.encode('$salt:$pin')).toString();
+      final salt = PinHasher.generateSalt();
+      final hash = PinHasher.hash(salt, pin);
       await _secureStorage.write(key: _kPinSaltKey, value: salt);
       await _secureStorage.write(key: _kPinHashKey, value: hash);
       return true;
@@ -392,7 +389,7 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       final salt = await _secureStorage.read(key: _kPinSaltKey);
       final storedHash = await _secureStorage.read(key: _kPinHashKey);
       if (salt == null || storedHash == null) return false;
-      final hash = sha256.convert(utf8.encode('$salt:$pin')).toString();
+      final hash = PinHasher.hash(salt, pin);
       return hash == storedHash;
     } catch (e) {
       debugPrint('[ProfilesNotifier] verifyPin failed: $e');

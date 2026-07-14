@@ -75,7 +75,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                       ),
                       decoration: BoxDecoration(
                         color: doneCount == tasks.length
-                            ? Colors.green.withValues(alpha: 0.15)
+                            ? kSuccess.withValues(alpha: 0.15)
                             : widget.accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -83,7 +83,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                         '$doneCount / ${tasks.length}',
                         style: TextStyle(
                           color: doneCount == tasks.length
-                              ? Colors.green
+                              ? kSuccess
                               : widget.accent,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -101,7 +101,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                     backgroundColor: kBorder,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       doneCount == tasks.length
-                          ? Colors.green
+                          ? kSuccess
                           : widget.accent,
                     ),
                     minHeight: 4,
@@ -134,11 +134,11 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                             height: 24,
                             decoration: BoxDecoration(
                               color: task.isDone
-                                  ? Colors.green.withValues(alpha: 0.2)
+                                  ? kSuccess.withValues(alpha: 0.2)
                                   : Colors.transparent,
                               border: Border.all(
                                 color: task.isDone
-                                    ? Colors.green
+                                    ? kSuccess
                                     : kBorder,
                                 width: 1.5,
                               ),
@@ -147,7 +147,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                             child: task.isDone
                                 ? const Icon(
                                     Icons.check_rounded,
-                                    color: Colors.green,
+                                    color: kSuccess,
                                     size: 16,
                                   )
                                 : null,
@@ -228,19 +228,24 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _addTask,
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: widget.accent.withValues(alpha: 0.15),
+                    Semantics(
+                      button: true,
+                      label: S.current.addTaskHint,
+                      child: Material(
+                        color: widget.accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        child: InkWell(
+                          onTap: _addTask,
                           borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.add_rounded,
-                          color: widget.accent,
-                          size: 20,
+                          child: SizedBox(
+                            width: 38,
+                            height: 38,
+                            child: Icon(
+                              Icons.add_rounded,
+                              color: widget.accent,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
                     ),

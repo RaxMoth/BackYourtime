@@ -180,10 +180,8 @@ class _ProfileCardState extends ConsumerState<ProfileCard> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: (unlocked
-                                      ? const Color(0xFF43A047)
-                                      : profile.color)
-                                  .withValues(alpha: 0.15),
+                          color: (unlocked ? kSuccess : profile.color)
+                              .withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -191,9 +189,7 @@ class _ProfileCardState extends ConsumerState<ProfileCard> {
                               ? Icons.lock_open_rounded
                               : Icons.lock_rounded,
                           size: 18,
-                          color: unlocked
-                              ? const Color(0xFF43A047)
-                              : profile.color,
+                          color: unlocked ? kSuccess : profile.color,
                         ),
                       ),
                     ),

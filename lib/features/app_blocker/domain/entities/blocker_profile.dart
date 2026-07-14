@@ -166,21 +166,26 @@ class BlockerProfile {
 
   /// Whether the current time is inside the schedule window.
   bool get isInsideScheduleWindow {
+    final now = TimeOfDay.now();
+    return isMinuteInsideScheduleWindow(now.hour * 60 + now.minute);
+  }
+
+  /// Pure, time-independent check: is [minuteOfDay] (0–1439) inside this
+  /// profile's schedule window? Handles overnight windows (e.g. 22:00–06:00).
+  /// Extracted from [isInsideScheduleWindow] so the math is unit-testable.
+  bool isMinuteInsideScheduleWindow(int minuteOfDay) {
     if (!scheduleEnabled ||
         scheduleStartHour == null ||
         scheduleEndHour == null) {
       return false;
     }
-    final now = TimeOfDay.now();
-    final nowMin = now.hour * 60 + now.minute;
-    final startMin =
-        scheduleStartHour! * 60 + (scheduleStartMinute ?? 0);
+    final startMin = scheduleStartHour! * 60 + (scheduleStartMinute ?? 0);
     final endMin = scheduleEndHour! * 60 + (scheduleEndMinute ?? 0);
     if (startMin <= endMin) {
-      return nowMin >= startMin && nowMin < endMin;
+      return minuteOfDay >= startMin && minuteOfDay < endMin;
     }
     // Overnight window (e.g. 22:00–06:00).
-    return nowMin >= startMin || nowMin < endMin;
+    return minuteOfDay >= startMin || minuteOfDay < endMin;
   }
 
   /// Whether ALL enabled rule requirements are currently satisfied,
