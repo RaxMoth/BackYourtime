@@ -104,14 +104,14 @@ void main() {
 
   group('Schedule window math (overnight-safe)', () {
     BlockerProfile window(int sh, int sm, int eh, int em) => BlockerProfile(
-          id: 's',
-          name: 'S',
-          scheduleEnabled: true,
-          scheduleStartHour: sh,
-          scheduleStartMinute: sm,
-          scheduleEndHour: eh,
-          scheduleEndMinute: em,
-        );
+      id: 's',
+      name: 'S',
+      scheduleEnabled: true,
+      scheduleStartHour: sh,
+      scheduleStartMinute: sm,
+      scheduleEndHour: eh,
+      scheduleEndMinute: em,
+    );
 
     int at(int h, int m) => h * 60 + m;
 
@@ -126,7 +126,10 @@ void main() {
 
     test('overnight window 22:00–06:00 spans midnight', () {
       final p = window(22, 0, 6, 0);
-      expect(p.isMinuteInsideScheduleWindow(at(22, 0)), true); // inclusive start
+      expect(
+        p.isMinuteInsideScheduleWindow(at(22, 0)),
+        true,
+      ); // inclusive start
       expect(p.isMinuteInsideScheduleWindow(at(23, 59)), true);
       expect(p.isMinuteInsideScheduleWindow(at(0, 0)), true);
       expect(p.isMinuteInsideScheduleWindow(at(5, 59)), true);
@@ -147,8 +150,11 @@ void main() {
       const disabled = BlockerProfile(id: 'd', name: 'D');
       expect(disabled.isMinuteInsideScheduleWindow(at(12, 0)), false);
 
-      const enabledButNoTimes =
-          BlockerProfile(id: 'e', name: 'E', scheduleEnabled: true);
+      const enabledButNoTimes = BlockerProfile(
+        id: 'e',
+        name: 'E',
+        scheduleEnabled: true,
+      );
       expect(enabledButNoTimes.isMinuteInsideScheduleWindow(at(12, 0)), false);
     });
   });
@@ -158,8 +164,11 @@ void main() {
       const manual = BlockerProfile(id: 'm', name: 'M');
       expect(manual.isManualOnly, true);
 
-      const scheduled =
-          BlockerProfile(id: 's', name: 'S', scheduleEnabled: true);
+      const scheduled = BlockerProfile(
+        id: 's',
+        name: 'S',
+        scheduleEnabled: true,
+      );
       expect(scheduled.isManualOnly, false);
     });
 
@@ -167,16 +176,22 @@ void main() {
       const none = BlockerProfile(id: 'a', name: 'A', tasks: []);
       expect(none.allTasksDone, false);
 
-      const partial = BlockerProfile(id: 'b', name: 'B', tasks: [
-        BlockerTask(id: '1', title: 'x', isDone: true),
-        BlockerTask(id: '2', title: 'y', isDone: false),
-      ]);
+      const partial = BlockerProfile(
+        id: 'b',
+        name: 'B',
+        tasks: [
+          BlockerTask(id: '1', title: 'x', isDone: true),
+          BlockerTask(id: '2', title: 'y', isDone: false),
+        ],
+      );
       expect(partial.allTasksDone, false);
       expect(partial.pendingTaskCount, 1);
 
-      const done = BlockerProfile(id: 'c', name: 'C', tasks: [
-        BlockerTask(id: '1', title: 'x', isDone: true),
-      ]);
+      const done = BlockerProfile(
+        id: 'c',
+        name: 'C',
+        tasks: [BlockerTask(id: '1', title: 'x', isDone: true)],
+      );
       expect(done.allTasksDone, true);
       expect(done.pendingTaskCount, 0);
     });

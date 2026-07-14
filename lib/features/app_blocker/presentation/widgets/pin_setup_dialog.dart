@@ -60,10 +60,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(
-              _error!,
-              style: const TextStyle(color: kAccent, fontSize: 12),
-            ),
+            Text(_error!, style: const TextStyle(color: kAccent, fontSize: 12)),
           ],
         ],
       ),

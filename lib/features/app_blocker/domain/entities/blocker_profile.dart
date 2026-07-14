@@ -22,17 +22,13 @@ class BlockerTask {
         isDone: isDone ?? this.isDone,
       );
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'isDone': isDone,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'title': title, 'isDone': isDone};
 
   factory BlockerTask.fromJson(Map<String, dynamic> j) => BlockerTask(
-        id: j['id'] as String? ?? '',
-        title: j['title'] as String? ?? '',
-        isDone: j['isDone'] as bool? ?? false,
-      );
+    id: j['id'] as String? ?? '',
+    title: j['title'] as String? ?? '',
+    isDone: j['isDone'] as bool? ?? false,
+  );
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -158,8 +154,7 @@ class BlockerProfile {
       !scheduleEnabled && !usageLimitEnabled && !taskModeEnabled;
 
   /// Whether all tasks are completed (relevant when [taskModeEnabled]).
-  bool get allTasksDone =>
-      tasks.isNotEmpty && tasks.every((t) => t.isDone);
+  bool get allTasksDone => tasks.isNotEmpty && tasks.every((t) => t.isDone);
 
   /// Number of remaining tasks.
   int get pendingTaskCount => tasks.where((t) => !t.isDone).length;
@@ -296,49 +291,50 @@ class BlockerProfile {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'colorValue': colorValue,
-        'iconLabel': iconLabel,
-        'isActive': isActive,
-        'scheduleEnabled': scheduleEnabled,
-        'scheduleStartHour': scheduleStartHour,
-        'scheduleStartMinute': scheduleStartMinute,
-        'scheduleEndHour': scheduleEndHour,
-        'scheduleEndMinute': scheduleEndMinute,
-        'usageLimitEnabled': usageLimitEnabled,
-        'usageLimitMinutes': usageLimitMinutes,
-        'taskModeEnabled': taskModeEnabled,
-        'tasks': tasks.map((t) => t.toJson()).toList(),
-        'hasAppsSelected': hasAppsSelected,
-        'appCount': appCount,
-        'tasksLastResetDate': tasksLastResetDate,
-        'shieldActivatedAt': shieldActivatedAt,
-        'totalSavedMinutes': totalSavedMinutes,
-      };
+    'id': id,
+    'name': name,
+    'colorValue': colorValue,
+    'iconLabel': iconLabel,
+    'isActive': isActive,
+    'scheduleEnabled': scheduleEnabled,
+    'scheduleStartHour': scheduleStartHour,
+    'scheduleStartMinute': scheduleStartMinute,
+    'scheduleEndHour': scheduleEndHour,
+    'scheduleEndMinute': scheduleEndMinute,
+    'usageLimitEnabled': usageLimitEnabled,
+    'usageLimitMinutes': usageLimitMinutes,
+    'taskModeEnabled': taskModeEnabled,
+    'tasks': tasks.map((t) => t.toJson()).toList(),
+    'hasAppsSelected': hasAppsSelected,
+    'appCount': appCount,
+    'tasksLastResetDate': tasksLastResetDate,
+    'shieldActivatedAt': shieldActivatedAt,
+    'totalSavedMinutes': totalSavedMinutes,
+  };
 
   factory BlockerProfile.fromJson(Map<String, dynamic> j) => BlockerProfile(
-        id: j['id'] as String? ?? '',
-        name: j['name'] as String? ?? 'Untitled',
-        colorValue: j['colorValue'] as int? ?? 0xFFE53935,
-        iconLabel: j['iconLabel'] as String? ?? 'Custom',
-        isActive: j['isActive'] as bool? ?? false,
-        scheduleEnabled: j['scheduleEnabled'] as bool? ?? false,
-        scheduleStartHour: (j['scheduleStartHour'] as int?)?.clamp(0, 23),
-        scheduleStartMinute: (j['scheduleStartMinute'] as int?)?.clamp(0, 59),
-        scheduleEndHour: (j['scheduleEndHour'] as int?)?.clamp(0, 23),
-        scheduleEndMinute: (j['scheduleEndMinute'] as int?)?.clamp(0, 59),
-        usageLimitEnabled: j['usageLimitEnabled'] as bool? ?? false,
-        usageLimitMinutes: (j['usageLimitMinutes'] as int?)?.clamp(1, 1440),
-        taskModeEnabled: j['taskModeEnabled'] as bool? ?? false,
-        tasks: (j['tasks'] as List<dynamic>?)
-                ?.map((e) => BlockerTask.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        hasAppsSelected: j['hasAppsSelected'] as bool? ?? false,
-        appCount: (j['appCount'] as int? ?? 0).clamp(0, 999),
-        tasksLastResetDate: j['tasksLastResetDate'] as String?,
-        shieldActivatedAt: j['shieldActivatedAt'] as String?,
-        totalSavedMinutes: (j['totalSavedMinutes'] as int? ?? 0).clamp(0, 999999),
-      );
+    id: j['id'] as String? ?? '',
+    name: j['name'] as String? ?? 'Untitled',
+    colorValue: j['colorValue'] as int? ?? 0xFFE53935,
+    iconLabel: j['iconLabel'] as String? ?? 'Custom',
+    isActive: j['isActive'] as bool? ?? false,
+    scheduleEnabled: j['scheduleEnabled'] as bool? ?? false,
+    scheduleStartHour: (j['scheduleStartHour'] as int?)?.clamp(0, 23),
+    scheduleStartMinute: (j['scheduleStartMinute'] as int?)?.clamp(0, 59),
+    scheduleEndHour: (j['scheduleEndHour'] as int?)?.clamp(0, 23),
+    scheduleEndMinute: (j['scheduleEndMinute'] as int?)?.clamp(0, 59),
+    usageLimitEnabled: j['usageLimitEnabled'] as bool? ?? false,
+    usageLimitMinutes: (j['usageLimitMinutes'] as int?)?.clamp(1, 1440),
+    taskModeEnabled: j['taskModeEnabled'] as bool? ?? false,
+    tasks:
+        (j['tasks'] as List<dynamic>?)
+            ?.map((e) => BlockerTask.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [],
+    hasAppsSelected: j['hasAppsSelected'] as bool? ?? false,
+    appCount: (j['appCount'] as int? ?? 0).clamp(0, 999),
+    tasksLastResetDate: j['tasksLastResetDate'] as String?,
+    shieldActivatedAt: j['shieldActivatedAt'] as String?,
+    totalSavedMinutes: (j['totalSavedMinutes'] as int? ?? 0).clamp(0, 999999),
+  );
 }

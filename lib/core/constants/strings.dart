@@ -584,7 +584,8 @@ class _De extends S {
   @override
   String get tapToChooseApps => 'Tippe, um Apps für dieses Profil zu wählen';
   @override
-  String get tapToEditSelection => 'Tippe, um die Auswahl anzusehen oder zu ändern';
+  String get tapToEditSelection =>
+      'Tippe, um die Auswahl anzusehen oder zu ändern';
   @override
   String get pickerModeWheel => 'Rad';
   @override
@@ -859,7 +860,8 @@ class _Es extends S {
   @override
   String get selectAppsToBlock => 'Seleccionar apps a bloquear';
   @override
-  String get tapToChooseApps => 'Toca para elegir las apps que este perfil bloquea';
+  String get tapToChooseApps =>
+      'Toca para elegir las apps que este perfil bloquea';
   @override
   String get tapToEditSelection => 'Toca para ver o cambiar la selección';
   @override

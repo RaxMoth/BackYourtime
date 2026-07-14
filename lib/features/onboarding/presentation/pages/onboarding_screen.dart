@@ -169,11 +169,7 @@ class _OnboardingPage extends StatelessWidget {
           Text(
             bodies[index],
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: kTextSecondary,
-              fontSize: 15,
-              height: 1.6,
-            ),
+            style: TextStyle(color: kTextSecondary, fontSize: 15, height: 1.6),
           ),
         ],
       ),

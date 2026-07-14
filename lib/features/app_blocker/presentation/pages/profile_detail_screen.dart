@@ -182,8 +182,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) =>
-            PinSetupDialog(onSave: (pin) => notifier.savePin(pin)),
+        builder: (_) => PinSetupDialog(onSave: (pin) => notifier.savePin(pin)),
       );
     }
   }
@@ -324,8 +323,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   customBorder: shape,
                                   onTap: () {
                                     setState(
-                                      () => _selectedColorValue =
-                                          pc.color.toARGB32(),
+                                      () => _selectedColorValue = pc.color
+                                          .toARGB32(),
                                     );
                                     _save();
                                   },
@@ -826,7 +825,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 }
               }
             },
-            child: Text(S.current.delete, style: const TextStyle(color: kAccent)),
+            child: Text(
+              S.current.delete,
+              style: const TextStyle(color: kAccent),
+            ),
           ),
         ],
       ),
@@ -1000,8 +1002,7 @@ class _UsageLimitPickerSheetState extends State<_UsageLimitPickerSheet> {
                   ),
                   child: CupertinoTimerPicker(
                     mode: CupertinoTimerPickerMode.hm,
-                    initialTimerDuration:
-                        Duration(minutes: _currentMinutes),
+                    initialTimerDuration: Duration(minutes: _currentMinutes),
                     minuteInterval: 1,
                     onTimerDurationChanged: (d) {
                       _currentMinutes = d.inMinutes.clamp(1, 1439);
@@ -1100,8 +1101,10 @@ class _NumericInput extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: accent, width: 2),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 8,
+              ),
             ),
           ),
         ),
@@ -1224,10 +1227,7 @@ class _AppSelectionCard extends StatelessWidget {
                       empty
                           ? S.current.tapToChooseApps
                           : S.current.tapToEditSelection,
-                      style: TextStyle(
-                        color: kTextSecondary,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: kTextSecondary, fontSize: 12),
                     ),
                   ],
                 ),

@@ -17,7 +17,10 @@ void main() {
     });
 
     test('hash is deterministic for a fixed salt + pin', () {
-      expect(PinHasher.hash('abc123', '0000'), PinHasher.hash('abc123', '0000'));
+      expect(
+        PinHasher.hash('abc123', '0000'),
+        PinHasher.hash('abc123', '0000'),
+      );
     });
 
     test('same PIN under different salts yields different hashes', () {
@@ -38,7 +41,10 @@ void main() {
     });
 
     test('generateSalt is deterministic under a seeded Random', () {
-      expect(PinHasher.generateSalt(Random(42)), PinHasher.generateSalt(Random(42)));
+      expect(
+        PinHasher.generateSalt(Random(42)),
+        PinHasher.generateSalt(Random(42)),
+      );
     });
 
     test('generateSalt produces distinct salts across calls', () {

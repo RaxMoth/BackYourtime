@@ -9,8 +9,7 @@ void updateTokenBrightness(Brightness b) => _brightness = b;
 bool get _isDark => _brightness == Brightness.dark;
 
 // ── Color tokens ───────────────────────────────────────────────────────────
-Color get kBg =>
-    _isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF5F5F5);
+Color get kBg => _isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF5F5F5);
 Color get kSurface =>
     _isDark ? const Color(0xFF1A1A1A) : const Color(0xFFFFFFFF);
 Color get kSurfaceHigh =>
@@ -18,6 +17,7 @@ Color get kSurfaceHigh =>
 Color get kBorder =>
     _isDark ? const Color(0xFF2A2A2A) : const Color(0xFFE0E0E0);
 const kAccent = Color(0xFFE53935);
+
 /// Success / completed state (task done, profile unlocked).
 const kSuccess = Color(0xFF43A047);
 Color get kAccentDark =>

@@ -54,8 +54,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
               // Header row
               Row(
                 children: [
-                  Icon(Icons.checklist_rounded,
-                      color: widget.accent, size: 20),
+                  Icon(Icons.checklist_rounded, color: widget.accent, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -100,9 +99,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                     value: tasks.isEmpty ? 0 : doneCount / tasks.length,
                     backgroundColor: kBorder,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      doneCount == tasks.length
-                          ? kSuccess
-                          : widget.accent,
+                      doneCount == tasks.length ? kSuccess : widget.accent,
                     ),
                     minHeight: 4,
                   ),
@@ -137,9 +134,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                                   ? kSuccess.withValues(alpha: 0.2)
                                   : Colors.transparent,
                               border: Border.all(
-                                color: task.isDone
-                                    ? kSuccess
-                                    : kBorder,
+                                color: task.isDone ? kSuccess : kBorder,
                                 width: 1.5,
                               ),
                               borderRadius: BorderRadius.circular(6),
@@ -159,9 +154,7 @@ class _TaskListSectionState extends ConsumerState<TaskListSection> {
                         child: Text(
                           task.title,
                           style: TextStyle(
-                            color: task.isDone
-                                ? kTextSecondary
-                                : kTextPrimary,
+                            color: task.isDone ? kTextSecondary : kTextPrimary,
                             fontSize: 14,
                             decoration: task.isDone
                                 ? TextDecoration.lineThrough

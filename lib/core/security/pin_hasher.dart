@@ -16,9 +16,10 @@ class PinHasher {
   /// it to get a cryptographically secure salt via [Random.secure].
   static String generateSalt([Random? random]) {
     final rng = random ?? Random.secure();
-    return List.generate(16, (_) => rng.nextInt(256))
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
+    return List.generate(
+      16,
+      (_) => rng.nextInt(256),
+    ).map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   /// Hashes [pin] with [salt] using SHA-256 over `'<salt>:<pin>'`.

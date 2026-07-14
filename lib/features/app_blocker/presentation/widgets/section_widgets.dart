@@ -200,8 +200,7 @@ class FullWidthButton extends StatelessWidget {
                 }
               : null,
           style: TextButton.styleFrom(
-            backgroundColor:
-                enabled ? bgColor : bgColor.withValues(alpha: 0.3),
+            backgroundColor: enabled ? bgColor : bgColor.withValues(alpha: 0.3),
             // Slight overlay on press for visible state change
             overlayColor: color.withValues(alpha: 0.12),
             padding: const EdgeInsets.symmetric(vertical: 16),

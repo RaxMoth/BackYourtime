@@ -38,8 +38,6 @@ final goRouter = GoRouter(
   ],
   errorBuilder: (context, state) => Scaffold(
     appBar: AppBar(title: const Text('Error')),
-    body: Center(
-      child: Text('Route not found: ${state.fullPath}'),
-    ),
+    body: Center(child: Text('Route not found: ${state.fullPath}')),
   ),
 );

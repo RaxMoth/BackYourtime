@@ -117,8 +117,10 @@ class _TimerPinDialogState extends State<TimerPinDialog> {
                   },
             child: Text(
               S.current.deactivateAction,
-              style:
-                  const TextStyle(color: kAccent, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: kAccent,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
       ],

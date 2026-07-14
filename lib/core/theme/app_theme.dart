@@ -107,8 +107,10 @@ class AppTheme {
           borderSide: BorderSide(color: accent),
         ),
         labelStyle: TextStyle(color: textSecondary, fontSize: 13),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -153,24 +155,48 @@ class AppTheme {
       ),
       textTheme: TextTheme(
         displayLarge: TextStyle(
-            fontSize: 32, fontWeight: FontWeight.bold, color: textPrimary),
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: textPrimary,
+        ),
         displayMedium: TextStyle(
-            fontSize: 28, fontWeight: FontWeight.bold, color: textPrimary),
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: textPrimary,
+        ),
         displaySmall: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold, color: textPrimary),
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: textPrimary,
+        ),
         headlineSmall: TextStyle(
-            fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: textPrimary,
+        ),
         titleLarge: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textPrimary,
+        ),
         titleMedium: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
         titleSmall: TextStyle(
-            fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
         bodyLarge: TextStyle(fontSize: 16, color: textPrimary),
         bodyMedium: TextStyle(fontSize: 14, color: textPrimary),
         bodySmall: TextStyle(fontSize: 12, color: textSecondary),
         labelLarge: TextStyle(
-            fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: textPrimary,
+        ),
       ),
     );
   }

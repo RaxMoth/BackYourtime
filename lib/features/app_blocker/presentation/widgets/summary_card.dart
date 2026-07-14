@@ -47,9 +47,7 @@ class SummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: anyActive
-                    ? kAccentDark.withValues(alpha: 0.6)
-                    : kBorder,
+                color: anyActive ? kAccentDark.withValues(alpha: 0.6) : kBorder,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(

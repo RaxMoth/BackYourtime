@@ -151,7 +151,8 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       //                             event will engage the shield once the
       //                             user has actually used the apps for the
       //                             configured duration
-      final shouldShieldNow = profile.isManualOnly ||
+      final shouldShieldNow =
+          profile.isManualOnly ||
           (profile.scheduleEnabled && profile.isInsideScheduleWindow) ||
           (profile.taskModeEnabled && !profile.allTasksDone);
 
@@ -170,19 +171,23 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       if (profile.scheduleEnabled &&
           profile.scheduleStartHour != null &&
           profile.scheduleEndHour != null) {
-        monitorCalls.add(_ds.startSchedule(
-          profileId: profile.id,
-          startHour: profile.scheduleStartHour!,
-          startMinute: profile.scheduleStartMinute ?? 0,
-          endHour: profile.scheduleEndHour!,
-          endMinute: profile.scheduleEndMinute ?? 0,
-        ));
+        monitorCalls.add(
+          _ds.startSchedule(
+            profileId: profile.id,
+            startHour: profile.scheduleStartHour!,
+            startMinute: profile.scheduleStartMinute ?? 0,
+            endHour: profile.scheduleEndHour!,
+            endMinute: profile.scheduleEndMinute ?? 0,
+          ),
+        );
       }
       if (profile.usageLimitEnabled && profile.usageLimitMinutes != null) {
-        monitorCalls.add(_ds.startUsageLimit(
-          profileId: profile.id,
-          minutes: profile.usageLimitMinutes!,
-        ));
+        monitorCalls.add(
+          _ds.startUsageLimit(
+            profileId: profile.id,
+            minutes: profile.usageLimitMinutes!,
+          ),
+        );
       }
 
       await Future.wait<Object>([shieldCall, ...monitorCalls]);
@@ -240,7 +245,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
       if (p.shieldActivatedAt != null) {
         final activated = DateTime.tryParse(p.shieldActivatedAt!);
         if (activated != null) {
-          sessionMinutes = now.difference(activated).inMinutes.clamp(0, 1 << 30);
+          sessionMinutes = now
+              .difference(activated)
+              .inMinutes
+              .clamp(0, 1 << 30);
         }
       }
       return p.copyWith(
@@ -424,8 +432,10 @@ class ProfilesNotifier extends AsyncNotifier<List<BlockerProfile>> {
         if (p.shieldActivatedAt != null) {
           final activated = DateTime.tryParse(p.shieldActivatedAt!);
           if (activated != null) {
-            sessionMinutes =
-                now.difference(activated).inMinutes.clamp(0, 1 << 30);
+            sessionMinutes = now
+                .difference(activated)
+                .inMinutes
+                .clamp(0, 1 << 30);
           }
         }
         return p.copyWith(

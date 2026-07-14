@@ -1,8 +1,8 @@
 name: CI
 
-# Runs static analysis and the unit-test suite on every push to main and on
-# every pull request targeting main. A broken `flutter analyze` or a failing
-# `flutter test` fails the check, blocking the merge.
+# Runs formatting, static analysis and the unit-test suite on every push to main
+# and on every pull request targeting main. A formatting drift, a broken
+# `flutter analyze` or a failing `flutter test` fails the check, blocking the merge.
 
 on:
   push:
@@ -32,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         run: flutter analyze

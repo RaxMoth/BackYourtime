@@ -172,7 +172,9 @@ class DashboardBody extends ConsumerWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              S.current.errorGeneric(S.current.activationFailed),
+                              S.current.errorGeneric(
+                                S.current.activationFailed,
+                              ),
                               style: TextStyle(color: kTextPrimary),
                             ),
                             backgroundColor: kSurface,
