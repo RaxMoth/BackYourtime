@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- 2026-07-15: Missing `mounted` guards after `await` in `profile_detail_screen` —
+  the usage-limit picker (`_pickUsageLimit`) and both schedule `showTimePicker`
+  callbacks (start/end `TimeTile.onTap`) called `setState` across the async gap
+  with no `if (!mounted) return;`. If the user popped the screen while a picker
+  was open, `setState` would fire on a defunct `State` (a debug assertion / silent
+  no-op in release). Added a `mounted` check after each `await`, matching the guard
+  pattern the rest of the codebase already follows. No behaviour change; analyze +
+  all 22 tests green.
+- 2026-07-14: `TextEditingController` leak in the dashboard create-profile sheet —
+  `_showCreateProfileSheet` (`dashboard_screen.dart`) allocated a controller per open
+  but never disposed it (it's a method local, not a `State` field, so it slipped past
+  the pattern every other controller in the tree follows). Attached
+  `.whenComplete(controller.dispose)` to the `showModalBottomSheet` future so it's
+  released when the sheet closes. No behaviour change; analyze + all 22 tests green.
+
 ### Changed
+- 2026-07-15: `.select()` narrowing in `ProfileDetailPageShell` — the profile detail
+  shell watched the entire `profilesProvider` (`AsyncValue<List<BlockerProfile>>`) and
+  extracted one profile by id, so editing *any* profile rebuilt the open detail screen.
+  It now watches `profilesProvider.select((async) => async.whenData((list) => …))`,
+  projecting only the matching profile. `ProfilesNotifier` preserves the identity of
+  unchanged profiles across state updates (`list.map((p) => p.id == effective.id ? effective : p)`),
+  so the selected `AsyncValue` compares equal when a sibling profile changes and the shell
+  no longer rebuilds. Loading/error/not-found paths unchanged; analyze + all 22 tests green.
+- 2026-07-14: `dart format` compliance + CI formatting gate — reformatted the tree
+  (20 files drifted) and added a `dart format --output=none --set-exit-if-changed lib test`
+  step to `ci.yml` ahead of Analyze, so formatting drift now fails the check. Pure
+  formatting, no logic change; analyze + all 22 tests still green.
 - 2026-07-14: Framework-lean picker controls — the color and icon pickers in
   `profile_detail_screen` and the add-task button in `task_list_section` now use
   `Material` + `InkWell` (touch ripple + keyboard-focus highlight) wrapped in

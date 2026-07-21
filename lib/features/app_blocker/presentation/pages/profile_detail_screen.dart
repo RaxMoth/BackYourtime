@@ -21,8 +21,17 @@ class ProfileDetailPageShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profilesAsync = ref.watch(profilesProvider);
-    return profilesAsync.when(
+    // Narrow the watch to just this profile: unchanged profiles keep their
+    // identity across state updates (see ProfilesNotifier), so selecting the
+    // matching one means editing *other* profiles no longer rebuilds this shell.
+    final profileAsync = ref.watch(
+      profilesProvider.select(
+        (async) => async.whenData(
+          (profiles) => profiles.where((p) => p.id == profileId).firstOrNull,
+        ),
+      ),
+    );
+    return profileAsync.when(
       loading: () => Scaffold(
         backgroundColor: kBg,
         body: const Center(child: CircularProgressIndicator(color: kAccent)),
@@ -31,8 +40,7 @@ class ProfileDetailPageShell extends ConsumerWidget {
         backgroundColor: kBg,
         body: Center(child: Text(S.current.errorGeneric(e))),
       ),
-      data: (profiles) {
-        final profile = profiles.where((p) => p.id == profileId).firstOrNull;
+      data: (profile) {
         if (profile == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) Navigator.of(context).pop();
@@ -135,6 +143,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (result != null && result != _usageLimitMinutes) {
       HapticFeedback.lightImpact();
       setState(() => _usageLimitMinutes = result);
@@ -499,6 +508,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                                 child: child!,
                                               ),
                                             );
+                                            if (!mounted) return;
                                             if (t != null) {
                                               setState(() => _startTime = t);
                                               _save();
@@ -525,6 +535,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                                 child: child!,
                                               ),
                                             );
+                                            if (!mounted) return;
                                             if (t != null) {
                                               setState(() => _endTime = t);
                                               _save();

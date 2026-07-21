@@ -99,7 +99,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _createProfile(

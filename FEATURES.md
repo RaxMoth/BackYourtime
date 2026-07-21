@@ -30,6 +30,14 @@ Bootstrapped from `LAUNCH_TODO.md` and a code read on 2026-07-06.
   and the add-task button (`task_list_section`) use `Material` + `InkWell` (ripple +
   focus highlight) wrapped in `Semantics` (screen-reader button role + selected state),
   replacing the prior `GestureDetector` + `Container` tap targets. Visuals unchanged.
+- **`dart format` compliance + CI gate** — reformatted the tree (20 files) and added a
+  `dart format --output=none --set-exit-if-changed lib test` step to `ci.yml`, so
+  formatting drift now fails the check alongside analyze/test. Formatting-only, no logic change.
+- **`.select()` narrowing in `profile_detail_screen`** — `ProfileDetailPageShell` now
+  watches `profilesProvider.select(...)` projecting only the matching profile (via
+  `AsyncValue.whenData`) instead of the whole list. Unchanged profiles keep their identity
+  across `ProfilesNotifier` state updates, so editing any *other* profile no longer rebuilds
+  the open detail screen. Loading/error/not-found handling unchanged.
 
 ## 🚧 In progress
 
@@ -40,13 +48,18 @@ Bootstrapped from `LAUNCH_TODO.md` and a code read on 2026-07-06.
 Sourced from `LAUNCH_TODO.md` "Quality-of-life follow-ups" plus audit findings.
 Highest-value first.
 
-- **`dart format` compliance + CI gate** — 20 files currently drift from
-  `dart format` (verified 2026-07-14). Reformat the tree in one dedicated pass,
-  then re-add a `dart format --set-exit-if-changed` step to `ci.yml`. Kept separate
-  so the reformat diff is reviewed on its own. (~30 min)
-- **`.select()` narrowing in `dashboard_body`** — dashboard watches `localeProvider` /
-  `themeModeProvider` wholesale; scope rebuilds with `.select` where only a derived value
-  is used. Low risk, measure first. (~30 min)
+- **Localize hardcoded English in Semantics labels** — screen-reader labels in
+  `profile_card.dart:29` ("mode"/"active"/"inactive"), `task_list_section.dart:47`
+  ("of"/"completed"), and `rule_toggle_card.dart:34` ("enabled"/"disabled") are hardcoded
+  English. Add `S` keys across all 5 locales and interpolate. (~30 min)
+- **Undersized task-delete tap target** — the per-task delete "X" in `task_list_section.dart`
+  (~line 167) is a `GestureDetector` → `Padding(4)` → `Icon(18)`, ~26px (below the 48px a11y
+  minimum) with no ripple. Swap for an `IconButton`. (~15 min)
+- **Hand-rolled toggle switches → `Switch`** — `rule_toggle_card.dart` (~line 92) and
+  `profile_card.dart` (~line 205) reimplement Material `Switch` with `AnimatedContainer` +
+  `AnimatedAlign`. Larger refactor; partly a deliberate style choice. Note the inner toggle
+  `GestureDetector` in `rule_toggle_card` overlaps the card's own `InkWell` (two handlers for
+  one action). (est. TBD)
 - **Crash reporter** (Sentry or similar) — note: changes the privacy label, must be
   disclosed. Post-launch. (~1–2 h)
 - **Freemium model** — e.g. 1 profile free, unlimited paid. Product decision. (est. TBD)
